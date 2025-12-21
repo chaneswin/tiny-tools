@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文字拖曳排序工具</title>
+    <!-- 引用 SortableJS 函式庫，讓拖曳變得超級簡單 -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1 );
+        }
+        h1, h2 {
+            text-align: center;
+            color: #1a73e8;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #155ab6;
+        }
+        #sortable-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+            min-height: 50px; /* 即使是空的也有高度 */
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .list-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            cursor: grab;
+            user-select: none;
+        }
+        .list-item:last-child {
+            margin-bottom: 0;
+        }
+        /* SortableJS 會自動添加的 class，用於拖曳時的視覺效果 */
+        .sortable-ghost {
+            opacity: 0.4;
+            background: #cce5ff;
+        }
+        .sortable-drag {
+            opacity: 1 !important; /* 確保被拖曳的項目本身不透明 */
+        }
+        #output-container {
+            margin-top: 20px;
+            display: none; /* 預設隱藏 */
+        }
+        #copy-button {
+            background-color: #28a745; /* 綠色按鈕 */
+        }
+        #copy-button:hover {
+            background-color: #218838;
+        }
+        .feedback {
+            text-align: center;
+            font-weight: bold;
+            color: #28a745;
+            margin-top: 10px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>文字拖曳排序工具</h1>
+
+        <h2>1. 貼上你的文字</h2>
+        <textarea id="text-input" placeholder="在這裡貼上你的文字，每個項目佔一行..."></textarea>
+        <button id="generate-list-button">生成可拖曳列表</button>
+
+        <hr style="margin: 25px 0; border: 1px solid #eee;">
+
+        <h2>2. 拖曳以排序</h2>
+        <ul id="sortable-list"></ul>
+
+        <div id="output-container">
+            <h2>3. 複製結果</h2>
+            <button id="copy-button">一鍵複製排序後的文字</button>
+            <div id="feedback-message" class="feedback"></div>
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('text-input');
+        const generateListButton = document.getElementById('generate-list-button');
+        const sortableList = document.getElementById('sortable-list');
+        const outputContainer = document.getElementById('output-container');
+        const copyButton = document.getElementById('copy-button');
+        const feedbackMessage = document.getElementById('feedback-message');
+
+        // 步驟 1: 點擊按鈕，生成列表
+        generateListButton.addEventListener('click', () => {
+            const text = textInput.value.trim();
+            if (!text) {
+                alert('請先貼上文字！');
+                return;
+            }
+
+            // 清空舊列表
+            sortableList.innerHTML = '';
+
+            // 將文字按行分割，過濾掉空行
+            const items = text.split('\n').filter(line => line.trim() !== '');
+
+            // 為每個項目創建一個列表元素
+            items.forEach(itemText => {
+                const li = document.createElement('li');
+                li.className = 'list-item';
+                li.textContent = itemText.trim();
+                sortableList.appendChild(li);
+            });
+
+            // 顯示排序和複製區域
+            outputContainer.style.display = 'block';
+            feedbackMessage.textContent = ''; // 清除舊的提示訊息
+        });
+
+        // 步驟 2: 初始化 SortableJS，讓列表可拖曳
+        new Sortable(sortableList, {
+            animation: 150, // 拖曳動畫的毫秒數
+            ghostClass: 'sortable-ghost' // 拖曳時佔位符的 CSS class
+        });
+
+        // 步驟 3: 點擊按鈕，複製結果
+        copyButton.addEventListener('click', () => {
+            const listItems = sortableList.querySelectorAll('.list-item');
+            if (listItems.length === 0) {
+                alert('列表中沒有項目可以複製！');
+                return;
+            }
+
+            // 從排序好的列表中提取文字，並用換行符組合
+            const sortedText = Array.from(listItems)
+                                  .map(li => li.textContent)
+                                  .join('\n');
+
+            // 使用 Clipboard API 複製到剪貼簿
+            navigator.clipboard.writeText(sortedText).then(() => {
+                // 顯示成功提示
+                feedbackMessage.textContent = '成功複製到剪貼簿！';
+                // 2秒後自動清除提示
+                setTimeout(() => {
+                    feedbackMessage.textContent = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('複製失敗: ', err);
+                feedbackMessage.textContent = '複製失敗，請手動複製。';
+            });
+        });
+    </script>
+
+</body>
+</html>
