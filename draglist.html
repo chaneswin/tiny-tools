@@ -7,6 +7,9 @@
     <!-- 引用 SortableJS 函式庫，讓拖曳變得超級簡單 -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: #f0f2f5;
@@ -14,67 +17,118 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            padding: 10px;
             margin: 0;
+            min-height: 100vh;
         }
         .container {
-            width: 90%;
-            max-width: 600px;
+            width: 100%;
+            max-width: 1200px;
             background: #fff;
-            padding: 25px;
+            padding: 15px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1 );
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        h1, h2 {
+        h1 {
             text-align: center;
             color: #1a73e8;
+            margin: 0 0 15px 0;
+            font-size: 1.5em;
+        }
+        h2 {
+            text-align: center;
+            color: #1a73e8;
+            margin: 10px 0 8px 0;
+            font-size: 1.1em;
+        }
+        .main-content {
+            display: flex;
+            gap: 20px;
+            align-items: stretch;
+            min-height: 500px;
+        }
+        .input-section {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .sort-section {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .input-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
         }
         textarea {
             width: 100%;
-            height: 150px;
+            flex: 1;
+            min-height: 300px;
             padding: 10px;
             border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 16px;
-            margin-bottom: 15px;
-            box-sizing: border-box;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            resize: vertical;
+            font-family: inherit;
+            line-height: 1.5;
         }
         button {
             display: block;
             width: 100%;
-            padding: 12px;
-            font-size: 16px;
+            padding: 8px;
+            font-size: 14px;
             font-weight: bold;
             color: #fff;
             background-color: #1a73e8;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             transition: background-color 0.2s;
         }
         button:hover {
             background-color: #155ab6;
         }
+        button:active {
+            transform: scale(0.98);
+        }
+        hr {
+            margin: 12px 0;
+            border: 1px solid #eee;
+        }
         #sortable-list {
             list-style-type: none;
-            padding: 0;
-            margin-top: 20px;
-            min-height: 50px; /* 即使是空的也有高度 */
+            padding: 8px;
+            margin-top: 10px;
+            min-height: 40px;
+            max-height: 400px;
+            overflow-y: auto;
             border: 1px dashed #ccc;
-            border-radius: 8px;
-            padding: 10px;
+            border-radius: 6px;
+            flex: 1;
+            min-height: 0;
         }
         .list-item {
-            padding: 12px 15px;
-            margin-bottom: 8px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
             background-color: #f8f9fa;
             border: 1px solid #dee2e6;
-            border-radius: 6px;
+            border-radius: 4px;
             cursor: grab;
             user-select: none;
+            font-size: 14px;
+            line-height: 1.4;
         }
         .list-item:last-child {
             margin-bottom: 0;
+        }
+        .list-item:active {
+            cursor: grabbing;
         }
         /* SortableJS 會自動添加的 class，用於拖曳時的視覺效果 */
         .sortable-ghost {
@@ -82,14 +136,40 @@
             background: #cce5ff;
         }
         .sortable-drag {
-            opacity: 1 !important; /* 確保被拖曳的項目本身不透明 */
+            opacity: 1 !important;
         }
         #output-container {
-            margin-top: 20px;
-            display: none; /* 預設隱藏 */
+            margin-top: 12px;
+            display: none;
+        }
+        .output-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        /* 桌面端兩欄布局 */
+        @media (min-width: 769px) {
+            .main-content {
+                display: flex;
+                flex-direction: row;
+                min-height: calc(100vh - 150px);
+                max-height: calc(100vh - 150px);
+            }
+            .input-section, .sort-section {
+                flex: 1;
+            }
+            textarea {
+                min-height: 400px;
+            }
+            #sortable-list {
+                flex: 1;
+                min-height: 0;
+                max-height: none;
+            }
         }
         #copy-button {
-            background-color: #28a745; /* 綠色按鈕 */
+            background-color: #28a745;
         }
         #copy-button:hover {
             background-color: #218838;
@@ -98,8 +178,92 @@
             text-align: center;
             font-weight: bold;
             color: #28a745;
-            margin-top: 10px;
-            height: 20px;
+            margin-top: 8px;
+            height: 18px;
+            font-size: 13px;
+        }
+        
+        /* RWD 響應式設計 - 平板和手機單欄布局 */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            .container {
+                padding: 12px;
+                max-width: 100%;
+            }
+            .main-content {
+                flex-direction: column;
+                gap: 15px;
+                min-height: auto;
+                max-height: none;
+            }
+            .input-section, .sort-section {
+                display: flex;
+                flex-direction: column;
+            }
+            .input-wrapper {
+                flex: none;
+            }
+            h1 {
+                font-size: 1.3em;
+            }
+            h2 {
+                font-size: 1em;
+            }
+            textarea {
+                flex: none;
+                min-height: 180px;
+                height: 180px;
+                font-size: 13px;
+            }
+            #sortable-list {
+                flex: none;
+            }
+            button {
+                padding: 10px;
+                font-size: 14px;
+            }
+            .list-item {
+                padding: 10px;
+                font-size: 13px;
+            }
+            #sortable-list {
+                max-height: 300px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.2em;
+            }
+            h2 {
+                font-size: 0.95em;
+            }
+            textarea {
+                flex: none;
+                min-height: 120px;
+                height: 120px;
+                font-size: 12px;
+            }
+            button {
+                padding: 9px;
+                font-size: 13px;
+            }
+            .list-item {
+                padding: 8px;
+                font-size: 12px;
+            }
+            #sortable-list {
+                max-height: 200px;
+            }
+        }
+        
+        /* 確保在小屏幕上也能看到主要功能 */
+        @media (max-height: 600px) {
+            #sortable-list {
+                max-height: 150px;
+            }
         }
     </style>
 </head>
@@ -108,19 +272,25 @@
     <div class="container">
         <h1>文字拖曳排序工具</h1>
 
-        <h2>1. 貼上你的文字</h2>
-        <textarea id="text-input" placeholder="在這裡貼上你的文字，每個項目佔一行..."></textarea>
-        <button id="generate-list-button">生成可拖曳列表</button>
+        <div class="main-content">
+            <div class="input-section">
+                <h2>1. 貼上你的文字</h2>
+                <div class="input-wrapper">
+                    <textarea id="text-input" placeholder="在這裡貼上你的文字，每個項目佔一行..."></textarea>
+                    <button id="generate-list-button">生成可拖曳列表</button>
+                </div>
+            </div>
 
-        <hr style="margin: 25px 0; border: 1px solid #eee;">
-
-        <h2>2. 拖曳以排序</h2>
-        <ul id="sortable-list"></ul>
-
-        <div id="output-container">
-            <h2>3. 複製結果</h2>
-            <button id="copy-button">一鍵複製排序後的文字</button>
-            <div id="feedback-message" class="feedback"></div>
+            <div class="sort-section">
+                <h2>2. 拖曳以排序</h2>
+                <ul id="sortable-list"></ul>
+                
+                <div id="output-container" class="output-section">
+                    <h2>3. 複製結果</h2>
+                    <button id="copy-button">一鍵複製排序後的文字</button>
+                    <div id="feedback-message" class="feedback"></div>
+                </div>
+            </div>
         </div>
     </div>
 
