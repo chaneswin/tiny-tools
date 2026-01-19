@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小工具集合</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #FCFEFF;
+            color: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: #FFFFFF;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #213357;
+            margin: 0 0 15px 0;
+            font-size: 2.2em;
+            font-weight: 700;
+        }
+        .subtitle {
+            text-align: center;
+            color: #808080;
+            margin: 0 0 40px 0;
+            font-size: 1.1em;
+            font-weight: 400;
+        }
+        .intro-section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background-color: #FCFEFF;
+            border-radius: 8px;
+            border-left: 4px solid #005A87;
+        }
+        .intro-section h2 {
+            color: #213357;
+            margin: 0 0 15px 0;
+            font-size: 1.4em;
+        }
+        .intro-section p {
+            color: #000000;
+            line-height: 1.8;
+            margin: 0 0 10px 0;
+            font-size: 1em;
+        }
+        .intro-section p:last-child {
+            margin-bottom: 0;
+        }
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        .tool-card {
+            background: #FCFEFF;
+            border: 1px solid rgba(58, 58, 58, 0.15);
+            border-radius: 12px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0, 90, 135, 0.15);
+            border-color: #005A87;
+        }
+        .tool-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .tool-card h3 {
+            color: #005A87;
+            margin: 0 0 12px 0;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+        .tool-card p {
+            color: #000000;
+            line-height: 1.6;
+            margin: 0 0 15px 0;
+            font-size: 0.95em;
+        }
+        .tool-features {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0 0 0;
+        }
+        .tool-features li {
+            color: #808080;
+            font-size: 0.9em;
+            line-height: 1.8;
+            padding-left: 20px;
+            position: relative;
+            margin-bottom: 6px;
+        }
+        .tool-features li:before {
+            content: "✓";
+            color: #B35A1E;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        .cta-button {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 0.95em;
+            font-weight: bold;
+            color: #fff;
+            background-color: #005A87;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            box-shadow: 0 6px 14px rgba(33, 51, 87, 0.18);
+        }
+        .cta-button:hover {
+            background-color: #213357;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #808080;
+            font-size: 0.9em;
+            padding-top: 30px;
+            border-top: 1px solid rgba(58, 58, 58, 0.15);
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 25px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            .subtitle {
+                font-size: 1em;
+                margin-bottom: 30px;
+            }
+            .intro-section {
+                padding: 20px;
+                margin-bottom: 30px;
+            }
+            .intro-section h2 {
+                font-size: 1.2em;
+            }
+            .tools-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .tool-card {
+                padding: 25px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+            }
+            .subtitle {
+                font-size: 0.9em;
+            }
+            .intro-section h2 {
+                font-size: 1.1em;
+            }
+            .tool-card h3 {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ 小工具集合</h1>
+        <p class="subtitle">簡單實用的線上工具，提升你的工作效率</p>
+        
+        <div class="intro-section">
+            <h2>關於本站</h2>
+            <p>這裡收集了一系列輕量級的線上工具，專為提升日常工作效率而設計。無需安裝任何軟體，打開瀏覽器即可使用。所有工具都採用簡潔直觀的介面設計，讓你能夠快速上手，專注於完成任務。</p>
+            <p>所有工具均為純前端實現，你的資料不會上傳到任何伺服器，確保隱私安全。建議將重要結果自行儲存備份。</p>
+        </div>
+        
+        <div class="tools-grid">
+            <a href="draglist.html" class="tool-card">
+                <span class="tool-icon">📝</span>
+                <h3>文字拖曳排序工具</h3>
+                <p>透過直覺的拖曳操作，輕鬆重新排列文字項目順序。適合整理待辦事項、編排大綱或任何需要排序的文字內容。</p>
+                <ul class="tool-features">
+                    <li>口述/文字辨識待辦事項後，手動排序</li>
+                    <li>編排隨意想到的場景大綱</li>
+                    <li>支援桌面與行動裝置</li>
+                    <li>一鍵複製排序結果</li>
+                </ul>
+                <span class="cta-button">立即使用 →</span>
+            </a>
+            
+            <!-- 預留位置：未來可以新增更多工具 -->
+            <!-- 
+            <a href="tool2.html" class="tool-card">
+                <span class="tool-icon">🎨</span>
+                <h3>工具名稱</h3>
+                <p>工具描述...</p>
+                <ul class="tool-features">
+                    <li>功能特點 1</li>
+                    <li>功能特點 2</li>
+                    <li>功能特點 3</li>
+                </ul>
+                <span class="cta-button">立即使用 →</span>
+            </a>
+            -->
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 小工具集合 | 持續更新中</p>
+        </div>
+    </div>
+</body>
+</html>
