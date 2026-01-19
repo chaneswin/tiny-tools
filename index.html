@@ -237,9 +237,12 @@
         </div>
         
         <div class="footer">
-            <p>© 2026 小工具集合 | 持續更新中</p>
+            <p>© <span id="current-year"></span> 小工具集合 | 持續更新中</p>
         </div>
     </div>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
     <script src="components/qr.js" defer></script>
 </body>
 </html>
