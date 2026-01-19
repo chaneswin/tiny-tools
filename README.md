@@ -1,8 +1,13 @@
 # 小工具集合
 
-## 文字拖曳排序工具
+👉 [點擊這裡進入工具集合首頁](http://demo.chaneswin.idv.tw/tiny-tools/)
 
-👉 [點擊這裡使用文字拖曳排序工具](http://demo.chaneswin.idv.tw/dragList/draglist.html)
+這裡收集了一系列輕量級的線上工具，專為提升日常工作效率而設計。
+
+## 工具列表
+
+### 文字拖曳排序工具
+👉 [點擊這裡使用文字拖曳排序工具](http://demo.chaneswin.idv.tw/tiny-tools/draglist.html)
 
 本頁面僅為臨時拖曳排序用，務必把結果自己儲存起來
 
