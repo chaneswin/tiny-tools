@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文字拖曳排序工具</title>
+    <link rel="stylesheet" href="components/qr.css">
     <!-- 引用 SortableJS 函式庫，讓拖曳變得超級簡單 -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <!-- 使用 QR 碼 API 生成 QR 碼 -->
@@ -152,16 +153,10 @@
         
         /* 桌面端兩欄布局 */
         @media (min-width: 769px) {
-            .qr-container {
-                display: block !important; /* 只在桌面端顯示 */
-            }
         }
         
         /* 測試用：臨時顯示 QR 碼（可以刪除） */
         @media (min-width: 600px) {
-            .qr-container {
-                display: block !important;
-            }
             .main-content {
                 display: flex;
                 flex-direction: row;
@@ -198,30 +193,6 @@
             margin-top: 8px;
             height: 18px;
             font-size: 13px;
-        }
-        .qr-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            text-align: center;
-            padding: 12px;
-            background-color: #FFFFFF;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: none; /* 預設隱藏，只在桌面端顯示 */
-        }
-        .qr-container p {
-            margin: 0 0 8px 0;
-            font-size: 11px;
-            color: #808080;
-            font-weight: 500;
-        }
-        #qrcode {
-            display: inline-block;
-        }
-        #qrcode canvas {
-            display: block;
         }
         
         /* RWD 響應式設計 - 平板和手機單欄布局 */
@@ -310,10 +281,7 @@
 </head>
 <body>
 
-    <div class="qr-container">
-        <p>📱 手機掃碼</p>
-        <div id="qrcode"></div>
-    </div>
+</div>
 
     <div class="container">
         <h1>文字拖曳排序工具</h1>
@@ -340,32 +308,10 @@
         </div>
     </div>
 
+    <script src="components/qr.js" defer></script>
+
     <script>
         // 生成當前頁面的 QR 碼
-        (function() {
-            const currentUrl = window.location.href;
-            const qrContainer = document.getElementById('qrcode');
-            
-            if (qrContainer) {
-                // 使用 QR Server API 生成 QR 碼圖片
-                const qrImage = document.createElement('img');
-                // 如果是本地文件，使用完整路徑；否則使用當前 URL
-                const qrData = currentUrl.startsWith('file://') ? currentUrl : currentUrl;
-                qrImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(qrData);
-                qrImage.alt = 'QR Code';
-                qrImage.style.display = 'block';
-                qrImage.style.margin = '0 auto';
-                qrImage.onerror = function() {
-                    console.error('QR 碼圖片載入失敗');
-                    qrContainer.innerHTML = '<p style="color: #808080; font-size: 11px;">QR 碼載入失敗<br>請檢查網路連線</p>';
-                };
-                qrContainer.appendChild(qrImage);
-                
-                // 調試用：在控制台顯示當前 URL
-                console.log('QR 碼 URL:', currentUrl);
-            }
-        })();
-
         const textInput = document.getElementById('text-input');
         const generateListButton = document.getElementById('generate-list-button');
         const sortableList = document.getElementById('sortable-list');
