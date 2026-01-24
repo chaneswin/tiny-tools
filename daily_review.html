@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日複盤小工具 - 小工具集合</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #FCFEFF 0%, #E8F4F8 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 90, 135, 0.1);
+        }
+
+        .header h1 {
+            color: #005A87;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header .back-link {
+            display: inline-block;
+            color: #005A87;
+            text-decoration: none;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        }
+
+        .header .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .date-display {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #005A87;
+            margin-top: 15px;
+            padding: 10px;
+            background: #FCFEFF;
+            border-radius: 8px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 90, 135, 0.08);
+            border-left: 4px solid #005A87;
+        }
+
+        .section h2 {
+            color: #005A87;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #FCFEFF;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #E8F4F8;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #005A87;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: white;
+            background: #005A87;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #004466;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 90, 135, 0.3);
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.secondary:hover {
+            background: #5a6268;
+        }
+
+        #output {
+            white-space: pre-wrap;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 2px solid #E8F4F8;
+            display: none;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-link">← 返回首頁</a>
+            <h1>📝 每日複盤小工具</h1>
+            <p>動態生成 Markdown 筆記，只保留有內容的區塊</p>
+            <div class="date-display" id="current-date"></div>
+        </div>
+
+        <div class="section">
+            <h2>每日五行</h2>
+            <label for="q1">今天你有哪些賺錢動作呢?</label>
+            <input type="text" id="q1" placeholder="例如：完成一個專案、賣出一個產品...">
+
+            <label for="q2">今天你有做給人提供價值的事嗎?</label>
+            <input type="text" id="q2" placeholder="例如：分享知識、幫助同事解決問題...">
+
+            <label for="q3">今天你投資人了嗎?</label>
+            <input type="text" id="q3" placeholder="例如：請益前輩、與夥伴交流...">
+
+            <label for="q4">今天你是如何花錢的呢?</label>
+            <input type="text" id="q4" placeholder="例如：購買課程、投資自己、生活開銷...">
+
+            <label for="q5">今天你有照顧自己的身體嗎?</label>
+            <input type="text" id="q5" placeholder="例如：運動、健康飲食、充足睡眠...">
+        </div>
+
+        <div class="section">
+            <h2>日日精進</h2>
+            <label for="growth_yesterday">【昨日增長動作】</label>
+            <textarea id="growth_yesterday" placeholder="例如：9:00-10:00 學習了新的程式語言"></textarea>
+
+            <label for="growth_what">【有什麼增長】</label>
+            <textarea id="growth_what" placeholder="例如：學會了..."></textarea>
+            
+            <label for="growth_exp">【增長經驗】</label>
+            <textarea id="growth_exp" placeholder="例如：關鍵在於...，下次可以..."></textarea>
+
+            <label for="growth_today">【今日增長動作】</label>
+            <textarea id="growth_today" placeholder="例如：計畫閱讀某本書的章節"></textarea>
+        </div>
+
+        <div class="section">
+            <h2>【感恩日記】</h2>
+            <label for="gratitude">感謝（每行一個）</label>
+            <textarea id="gratitude" placeholder="感謝陽光...&#10;感謝家人的支持...&#10;感謝健康的身體..."></textarea>
+        </div>
+
+        <div class="section">
+            <h2>靈感孵化器</h2>
+            <label for="inspiration">把腦中靈感都放在這個區域</label>
+            <textarea id="inspiration" placeholder="可以是一個產品點子、一篇文章標題、一個生活小技巧..."></textarea>
+        </div>
+
+        <div class="section">
+            <h2>本日 AAR (After Action Review)</h2>
+            <label for="aar1">1. 今天完成了什麼事情？</label>
+            <textarea id="aar1"></textarea>
+            <label for="aar2">2. 選一件讓我有感覺、有啟發的事情</label>
+            <textarea id="aar2"></textarea>
+            <label for="aar3">3. 我從過程中學習到什麼事情?</label>
+            <textarea id="aar3"></textarea>
+            <label for="aar4">4. 下次要如何做可以更好/有可以更好的地方嗎？</label>
+            <textarea id="aar4"></textarea>
+            <label for="aar5">5. 這件事跟我的目標相關嗎？</label>
+            <textarea id="aar5"></textarea>
+        </div>
+        
+        <div class="section">
+            <h2>情緒日記</h2>
+            <label for="emotion_event">事件</label>
+            <textarea id="emotion_event"></textarea>
+            <label for="emotion_reaction">情緒反應</label>
+            <textarea id="emotion_reaction"></textarea>
+            <label for="emotion_response">更清晰恰當表達情緒的回應是</label>
+            <textarea id="emotion_response"></textarea>
+        </div>
+
+        <div class="button-group">
+            <button onclick="generateAndCopy()">生成並複製 MD</button>
+            <button class="secondary" onclick="clearAll()">清空所有欄位</button>
+        </div>
+
+        <pre id="output"></pre>
+
+        <div class="footer">
+            <p>本工具完全在瀏覽器本地運行，不會上傳任何資料</p>
+            <p>© 2026 小工具集合</p>
+        </div>
+    </div>
+
+    <script>
+        // 顯示當前日期
+        const dateElement = document.getElementById('current-date');
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const week = ['日', '一', '二', '三', '四', '五', '六'][today.getDay()];
+        dateElement.textContent = `${year}-${month}-${day} 星期${week}`;
+
+        function generateAndCopy() {
+            let mdContent = '';
+
+            // Helper function to add section if content exists
+            function addSection(title, fields) {
+                let sectionContent = '';
+                let hasContent = false;
+
+                fields.forEach(field => {
+                    const element = document.getElementById(field.id);
+                    if (element && element.value.trim() !== '') {
+                        hasContent = true;
+                        if (field.isList) {
+                            const lines = element.value.trim().split('\n').map(line => `1. ${line}`).join('\n');
+                            sectionContent += `${lines}\n\n`;
+                        } else {
+                            sectionContent += `${field.prefix}${element.value.trim()}\n`;
+                        }
+                    }
+                });
+
+                if (hasContent) {
+                    return `\n# ${title}\n\n${sectionContent}`;
+                }
+                return '';
+            }
+            
+            // Helper for simple key-value pairs
+            function addKeyValueSection(title, fields) {
+                let sectionContent = '';
+                fields.forEach(field => {
+                    const element = document.getElementById(field.id);
+                    if (element && element.value.trim() !== '') {
+                        sectionContent += `${field.label}:: ${element.value.trim()}\n`;
+                    }
+                });
+                if (sectionContent) {
+                    return `\n# ${title}\n\n${sectionContent}`;
+                }
+                return '';
+            }
+
+            // 每日五行
+            mdContent += addKeyValueSection('每日五行', [
+                { id: 'q1', label: '今天你有哪些賺錢動作呢' },
+                { id: 'q2', label: '今天你有做給人提供價值的事嗎' },
+                { id: 'q3', label: '今天你投資人了嗎' },
+                { id: 'q4', label: '今天你是如何花錢的呢' },
+                { id: 'q5', label: '今天你有照顧自己的身體嗎' }
+            ]);
+
+            // 日日精進
+            const todayStr = `${year}-${month}-${day} 星期${week}`;
+            let dailyProgressContent = '';
+            const growthYesterday = document.getElementById('growth_yesterday').value.trim();
+            const growthWhat = document.getElementById('growth_what').value.trim();
+            const growthExp = document.getElementById('growth_exp').value.trim();
+            const growthToday = document.getElementById('growth_today').value.trim();
+
+            if (growthYesterday || growthWhat || growthExp || growthToday) {
+                dailyProgressContent += `\n# 日日精進\n`;
+                dailyProgressContent += `${todayStr} && 日日精進 Day 1\n`;
+                if (growthYesterday) dailyProgressContent += `【昨日增長動作】\n${growthYesterday}\n`;
+                if (growthWhat) dailyProgressContent += `【有什麼增長】\n${growthWhat}\n`;
+                if (growthExp) dailyProgressContent += `- 【增長經驗】\n${growthExp}\n`;
+                if (growthToday) dailyProgressContent += `- 【今日增長動作】\n${growthToday}\n`;
+                dailyProgressContent += `\n每日一問：==我的發心是不是夠純正，是不是動機至善、私心了無==\n---\n`;
+                mdContent += dailyProgressContent;
+            }
+
+            // 感恩日記
+            const gratitudeValue = document.getElementById('gratitude').value.trim();
+            if (gratitudeValue) {
+                const gratitudeList = gratitudeValue.split('\n').map(line => `1. ${line.trim()}`).join('\n');
+                mdContent += `\n# 【感恩日記】\n\n感謝\n\n${gratitudeList}\n\n---\n`;
+            }
+
+            // 靈感孵化器
+            const inspirationValue = document.getElementById('inspiration').value.trim();
+            if (inspirationValue) {
+                mdContent += `\n# 靈感孵化器\n\n_把腦中靈感都放在這個區域_\n\n${inspirationValue}\n\n---\n`;
+            }
+
+            // 本日 AAR
+            mdContent += addSection('本日 AAR (After Action Review)', [
+                { id: 'aar1', prefix: '## 1. 今天完成了什麼事情？\n\n' },
+                { id: 'aar2', prefix: '## 2. 選一件讓我有感覺、有啟發的事情\n\n' },
+                { id: 'aar3', prefix: '## 3. 我從過程中學習到什麼事情?\n\n' },
+                { id: 'aar4', prefix: '## 4. 下次要如何做可以更好/有可以更好的地方嗎？\n\n' },
+                { id: 'aar5', prefix: '## 5. 這件事跟我的目標相關嗎？\n\n' }
+            ]);
+            
+            // 情緒日記
+            mdContent += addKeyValueSection('情緒日記', [
+                { id: 'emotion_event', label: '事件' },
+                { id: 'emotion_reaction', label: '情緒反應' },
+                { id: 'emotion_response', label: '更清晰恰當表達情緒的回應是' }
+            ]);
+
+            // 清理開頭可能多餘的換行
+            mdContent = mdContent.trim();
+
+            if (!mdContent) {
+                alert('請至少填寫一個欄位！');
+                return;
+            }
+
+            // 顯示並複製
+            const outputElement = document.getElementById('output');
+            outputElement.textContent = mdContent;
+            outputElement.style.display = 'block';
+
+            navigator.clipboard.writeText(mdContent).then(() => {
+                alert('✅ Markdown 已成功複製到剪貼簿！\n\n現在可以直接到 Obsidian 貼上了。');
+            }).catch(err => {
+                alert('❌ 複製失敗，請手動複製下方內容。');
+                console.error('Could not copy text: ', err);
+            });
+        }
+
+        function clearAll() {
+            if (confirm('確定要清空所有欄位嗎？')) {
+                document.querySelectorAll('input[type="text"], textarea').forEach(el => {
+                    el.value = '';
+                });
+                document.getElementById('output').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
