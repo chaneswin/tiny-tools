@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML 響應式預覽器</title>
+    <link rel="stylesheet" href="components/qr.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #FCFEFF;
+            color: #000000;
+            margin: 0;
+            padding: 10px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background: #FFFFFF;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        .header h1 {
+            color: #213357;
+            margin: 0 0 10px 0;
+            font-size: 1.5em;
+        }
+        .back-link {
+            display: inline-block;
+            color: #005A87;
+            text-decoration: none;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn {
+            padding: 10px 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #fff;
+            background-color: #005A87;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0, 90, 135, 0.2);
+        }
+        .btn:hover {
+            background-color: #213357;
+            transform: translateY(-1px);
+        }
+        .btn.active {
+            background-color: #B35A1E;
+        }
+        .btn-secondary {
+            background-color: #808080;
+        }
+        .btn-secondary:hover {
+            background-color: #3A3A3A;
+        }
+        .main-content {
+            display: flex;
+            gap: 15px;
+            flex: 1;
+            min-height: 0;
+        }
+        .input-section {
+            flex: 0 0 40%;
+            display: flex;
+            flex-direction: column;
+            background: #FFFFFF;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .input-section h2 {
+            color: #213357;
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+        }
+        #html-input {
+            flex: 1;
+            width: 100%;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            border: 1px solid rgba(58, 58, 58, 0.15);
+            border-radius: 6px;
+            resize: none;
+            margin-bottom: 10px;
+        }
+        #html-input:focus {
+            outline: none;
+            border-color: #005A87;
+        }
+        .preview-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #FFFFFF;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .preview-header h2 {
+            color: #213357;
+            margin: 0;
+            font-size: 1.2em;
+        }
+        .preview-size {
+            color: #808080;
+            font-size: 0.9em;
+        }
+        .preview-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow: auto;
+            background-color: #FCFEFF;
+            border: 1px solid rgba(58, 58, 58, 0.15);
+            border-radius: 6px;
+            padding: 20px;
+        }
+        #preview-container {
+            width: 100%;
+            max-width: 100%;
+            background: white;
+            transition: max-width 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        #preview-container.desktop {
+            max-width: 1920px;
+        }
+        #preview-container.tablet {
+            max-width: 768px;
+        }
+        #preview-container.mobile {
+            max-width: 375px;
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #B35A1E;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            .input-section {
+                flex: 0 0 auto;
+                min-height: 200px;
+            }
+            .preview-section {
+                flex: 1;
+            }
+            .controls {
+                gap: 8px;
+            }
+            .btn {
+                padding: 8px 15px;
+                font-size: 0.85em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html" class="back-link">← 返回首頁</a>
+        <h1>🖥️ HTML 響應式預覽器</h1>
+        <div class="controls">
+            <button class="btn active" id="btn-desktop" onclick="setPreviewMode('desktop')">桌面版</button>
+            <button class="btn" id="btn-tablet" onclick="setPreviewMode('tablet')">平板版</button>
+            <button class="btn" id="btn-mobile" onclick="setPreviewMode('mobile')">手機版</button>
+            <button class="btn btn-secondary" onclick="refreshPreview()">重新整理</button>
+            <button class="btn btn-secondary" onclick="clearAll()">清空</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="input-section">
+            <h2>HTML 代碼</h2>
+            <textarea id="html-input" placeholder="在此貼入 HTML 代碼...&#10;&#10;範例：&#10;<h1>Hello World</h1>&#10;<p>這是一段測試文字</p>"></textarea>
+            <button class="btn" onclick="copyCode()">複製代碼</button>
+        </div>
+
+        <div class="preview-section">
+            <div class="preview-header">
+                <h2>預覽</h2>
+                <span class="preview-size" id="preview-size">1920px</span>
+            </div>
+            <div class="preview-wrapper">
+                <div id="preview-container" class="desktop"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const htmlInput = document.getElementById('html-input');
+        const previewContainer = document.getElementById('preview-container');
+        const previewSize = document.getElementById('preview-size');
+        const toast = document.getElementById('toast');
+
+        let currentMode = 'desktop';
+
+        // 即時預覽
+        htmlInput.addEventListener('input', function() {
+            updatePreview();
+        });
+
+        // 更新預覽內容
+        function updatePreview() {
+            const htmlCode = htmlInput.value;
+            previewContainer.innerHTML = htmlCode;
+        }
+
+        // 設定預覽模式
+        function setPreviewMode(mode) {
+            currentMode = mode;
+            
+            // 移除所有按鈕的 active 狀態
+            document.querySelectorAll('.controls .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 設定當前按鈕為 active
+            document.getElementById('btn-' + mode).classList.add('active');
+            
+            // 移除所有模式類別
+            previewContainer.classList.remove('desktop', 'tablet', 'mobile');
+            
+            // 加入新的模式類別
+            previewContainer.classList.add(mode);
+            
+            // 更新尺寸顯示
+            const sizes = {
+                'desktop': '1920px',
+                'tablet': '768px',
+                'mobile': '375px'
+            };
+            previewSize.textContent = sizes[mode];
+        }
+
+        // 重新整理預覽
+        function refreshPreview() {
+            updatePreview();
+            showToast('已重新整理預覽');
+        }
+
+        // 清空所有內容
+        function clearAll() {
+            htmlInput.value = '';
+            previewContainer.innerHTML = '';
+            showToast('已清空所有內容');
+        }
+
+        // 複製代碼
+        function copyCode() {
+            const code = htmlInput.value;
+            if (!code) {
+                showToast('沒有可複製的內容');
+                return;
+            }
+            
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('代碼已複製到剪貼簿');
+            }).catch(err => {
+                showToast('複製失敗，請手動複製');
+            });
+        }
+
+        // 顯示提示訊息
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // 頁面載入時的預設範例
+        window.addEventListener('load', function() {
+            // 可選：載入預設範例
+            // htmlInput.value = '<h1>Hello World</h1>\n<p>這是一段測試文字</p>';
+            // updatePreview();
+        });
+    </script>
+    <script src="components/qr.js" defer></script>
+</body>
+</html>
