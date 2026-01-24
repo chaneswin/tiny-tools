@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>每日複盤小工具 - 小工具集合</title>
+    <title>復盤工具 - 小工具集合</title>
     <style>
         * {
             margin: 0;
@@ -88,7 +88,7 @@
             font-size: 0.95em;
         }
 
-        input[type="text"], textarea {
+        input[type="text"], input[type="number"], textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid #E8F4F8;
@@ -98,7 +98,7 @@
             transition: border-color 0.3s;
         }
 
-        input[type="text"]:focus, textarea:focus {
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
             outline: none;
             border-color: #005A87;
         }
@@ -106,6 +106,10 @@
         textarea {
             min-height: 100px;
             resize: vertical;
+        }
+
+        textarea.short {
+            min-height: 60px;
         }
 
         .button-group {
@@ -163,6 +167,12 @@
             font-size: 0.9em;
         }
 
+        .row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 1.5em;
@@ -175,6 +185,10 @@
             .button-group {
                 flex-direction: column;
             }
+
+            .row {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -182,11 +196,12 @@
     <div class="container">
         <div class="header">
             <a href="index.html" class="back-link">← 返回首頁</a>
-            <h1>📝 每日複盤小工具</h1>
+            <h1>📝 復盤工具</h1>
             <p>動態生成 Markdown 筆記，只保留有內容的區塊</p>
             <div class="date-display" id="current-date"></div>
         </div>
 
+        <!-- 每日五行 -->
         <div class="section">
             <h2>每日五行</h2>
             <label for="q1">今天你有哪些賺錢動作呢?</label>
@@ -205,6 +220,7 @@
             <input type="text" id="q5" placeholder="例如：運動、健康飲食、充足睡眠...">
         </div>
 
+        <!-- 日日精進 -->
         <div class="section">
             <h2>日日精進</h2>
             <label for="growth_yesterday">【昨日增長動作】</label>
@@ -220,18 +236,21 @@
             <textarea id="growth_today" placeholder="例如：計畫閱讀某本書的章節"></textarea>
         </div>
 
+        <!-- 感恩日記 -->
         <div class="section">
             <h2>【感恩日記】</h2>
             <label for="gratitude">感謝（每行一個）</label>
             <textarea id="gratitude" placeholder="感謝陽光...&#10;感謝家人的支持...&#10;感謝健康的身體..."></textarea>
         </div>
 
+        <!-- 靈感孵化器 -->
         <div class="section">
             <h2>靈感孵化器</h2>
             <label for="inspiration">把腦中靈感都放在這個區域</label>
             <textarea id="inspiration" placeholder="可以是一個產品點子、一篇文章標題、一個生活小技巧..."></textarea>
         </div>
 
+        <!-- 本日 AAR -->
         <div class="section">
             <h2>本日 AAR (After Action Review)</h2>
             <label for="aar1">1. 今天完成了什麼事情？</label>
@@ -245,7 +264,116 @@
             <label for="aar5">5. 這件事跟我的目標相關嗎？</label>
             <textarea id="aar5"></textarea>
         </div>
-        
+
+        <!-- 財富設定 -->
+        <div class="section">
+            <h2>財富設定</h2>
+            <label for="wealth_goal">金錢或財富目標</label>
+            <input type="text" id="wealth_goal" placeholder="例如：目標被動收入 外匯收入">
+
+            <label for="wealth_reasons">五個要有錢的具體重要理由</label>
+            <textarea class="short" id="wealth_reasons" placeholder="每行一個理由"></textarea>
+
+            <label for="wealth_vision">想像財務自由後的情景</label>
+            <textarea class="short" id="wealth_vision"></textarea>
+
+            <label for="wealth_contribution">本週貢獻給世界</label>
+            <textarea class="short" id="wealth_contribution"></textarea>
+
+            <label for="wealth_deserve">相信自己值得富有的三個原因</label>
+            <textarea class="short" id="wealth_deserve"></textarea>
+
+            <label for="wealth_achievements">本週五項滿意成就或挑戰與感想</label>
+            <textarea id="wealth_achievements"></textarea>
+
+            <label for="wealth_gratitude">本週與人生中感謝的十件事</label>
+            <textarea id="wealth_gratitude"></textarea>
+        </div>
+
+        <!-- 日常重要檢視 -->
+        <div class="section">
+            <h2>日常重要檢視</h2>
+            <label for="health_check">健康-運動或養生感恩自己的身體嗎</label>
+            <input type="text" id="health_check">
+
+            <label for="finance_check">財務-做了什麼投資</label>
+            <input type="text" id="finance_check">
+
+            <label for="family_check">家庭-陪家人一起做了什麼</label>
+            <input type="text" id="family_check">
+        </div>
+
+        <!-- 目標推進 -->
+        <div class="section">
+            <h2>目標推進</h2>
+            <label for="goal_weekly">概括本週是否讓我離目標更近</label>
+            <textarea class="short" id="goal_weekly"></textarea>
+
+            <label for="goal_short_feedback">短期正反饋評量</label>
+            <textarea class="short" id="goal_short_feedback"></textarea>
+
+            <label for="goal_next_week">下週要實現的目標</label>
+            <textarea class="short" id="goal_next_week"></textarea>
+
+            <label for="goal_long_term">長期目標設定與原因</label>
+            <textarea id="goal_long_term"></textarea>
+
+            <label for="goal_long_feedback">中長期正反饋評量</label>
+            <textarea class="short" id="goal_long_feedback"></textarea>
+        </div>
+
+        <!-- 信念重設 -->
+        <div class="section">
+            <h2>信念重設</h2>
+            <label for="belief_reset">破除的舊信念與建立的新信念</label>
+            <textarea id="belief_reset"></textarea>
+        </div>
+
+        <!-- 發掘並善用自我優勢 -->
+        <div class="section">
+            <h2>發掘並善用自我優勢</h2>
+            <p style="font-size: 0.9em; color: #666; margin-bottom: 10px;">交往、思維、適應、關聯、和諧、體諒、排難、審慎、學習、伯樂</p>
+            <label for="strength_usage">完成的事與用的優勢</label>
+            <textarea id="strength_usage"></textarea>
+        </div>
+
+        <!-- 產品或引流品的發想備選庫 -->
+        <div class="section">
+            <h2>產品或引流品的發想備選庫</h2>
+            <label for="product_ideas">想到的產品或引流品滿足了什麼需求以及可以用在那些方面</label>
+            <textarea id="product_ideas"></textarea>
+        </div>
+
+        <!-- 其他 -->
+        <div class="section">
+            <h2>其他</h2>
+            <label for="other_notes">報課或打卡注意事項</label>
+            <textarea class="short" id="other_notes"></textarea>
+
+            <label for="other_time">不知不覺投入時間的事</label>
+            <textarea class="short" id="other_time"></textarea>
+        </div>
+
+        <!-- 體圍記錄 -->
+        <div class="section">
+            <h2>體圍記錄</h2>
+            <div class="row">
+                <div>
+                    <label for="body_weight">體重 (kg)</label>
+                    <input type="number" id="body_weight" step="0.1" placeholder="例如：65.5">
+                </div>
+                <div>
+                    <label for="body_waist">腰圍 (cm)</label>
+                    <input type="number" id="body_waist" step="0.1" placeholder="例如：75">
+                </div>
+                <div>
+                    <label for="body_hip">臀圍 (cm)</label>
+                    <input type="number" id="body_hip" step="0.1" placeholder="例如：95">
+                </div>
+            </div>
+        </div>
+
+        <!-- 情緒日記 -->
         <div class="section">
             <h2>情緒日記</h2>
             <label for="emotion_event">事件</label>
@@ -254,6 +382,19 @@
             <textarea id="emotion_reaction"></textarea>
             <label for="emotion_response">更清晰恰當表達情緒的回應是</label>
             <textarea id="emotion_response"></textarea>
+        </div>
+
+        <!-- 待辦事項 -->
+        <div class="section">
+            <h2>待辦事項</h2>
+            <label for="todo_important">重要長期目標</label>
+            <textarea id="todo_important" placeholder="每行一個待辦事項，例如：&#10;- [ ] 模擬倉&#10;- [ ] 讀盤"></textarea>
+
+            <label for="todo_daily">日常必要推進</label>
+            <textarea id="todo_daily" placeholder="每行一個待辦事項"></textarea>
+
+            <label for="todo_misc">瑣事</label>
+            <textarea class="short" id="todo_misc" placeholder="每行一個待辦事項"></textarea>
         </div>
 
         <div class="button-group">
@@ -370,13 +511,83 @@
                 { id: 'aar4', prefix: '## 4. 下次要如何做可以更好/有可以更好的地方嗎？\n\n' },
                 { id: 'aar5', prefix: '## 5. 這件事跟我的目標相關嗎？\n\n' }
             ]);
-            
+
+            // 財富設定
+            mdContent += addKeyValueSection('insert template - inline fields\n## 財富設定', [
+                { id: 'wealth_goal', label: '金錢或財富目標' },
+                { id: 'wealth_reasons', label: '五個要有錢的具體重要理由' },
+                { id: 'wealth_vision', label: '想像財務自由後的情景' },
+                { id: 'wealth_contribution', label: '本週貢獻給世界' },
+                { id: 'wealth_deserve', label: '相信自己值得富有的三個原因' },
+                { id: 'wealth_achievements', label: '本週五項滿意成就或挑戰與感想' },
+                { id: 'wealth_gratitude', label: '本週與人生中感謝的十件事' }
+            ]);
+
+            // 日常重要檢視
+            mdContent += addKeyValueSection('## 日常重要檢視', [
+                { id: 'health_check', label: '健康-運動或養生感恩自己的身體嗎' },
+                { id: 'finance_check', label: '財務-做了什麼投資' },
+                { id: 'family_check', label: '家庭-陪家人一起做了什麼' }
+            ]);
+
+            // 目標推進
+            mdContent += addKeyValueSection('## 目標推進', [
+                { id: 'goal_weekly', label: '概括本週是否讓我離目標更近' },
+                { id: 'goal_short_feedback', label: '短期正反饋評量' },
+                { id: 'goal_next_week', label: '下週要實現的目標' },
+                { id: 'goal_long_term', label: '長期目標設定與原因' },
+                { id: 'goal_long_feedback', label: '中長期正反饋評量' }
+            ]);
+
+            // 信念重設
+            mdContent += addKeyValueSection('## 信念重設', [
+                { id: 'belief_reset', label: '破除的舊信念與建立的新信念' }
+            ]);
+
+            // 發掘並善用自我優勢
+            mdContent += addKeyValueSection('## 發掘並善用自我優勢（交往、思維、適應、關聯、和諧、體諒、排難、審慎、學習、伯樂）', [
+                { id: 'strength_usage', label: '完成的事與用的優勢' }
+            ]);
+
+            // 產品或引流品的發想備選庫
+            mdContent += addKeyValueSection('## 產品或引流品的發想備選庫', [
+                { id: 'product_ideas', label: '想到的產品或引流品滿足了什麼需求以及可以用在那些方面' }
+            ]);
+
+            // 其他
+            mdContent += addKeyValueSection('## 其他', [
+                { id: 'other_notes', label: '報課或打卡注意事項' },
+                { id: 'other_time', label: '不知不覺投入時間的事' }
+            ]);
+
+            // 體圍記錄
+            const bodyWeight = document.getElementById('body_weight').value.trim();
+            const bodyWaist = document.getElementById('body_waist').value.trim();
+            const bodyHip = document.getElementById('body_hip').value.trim();
+            if (bodyWeight || bodyWaist || bodyHip) {
+                mdContent += `\n### 體圍記錄\n`;
+                if (bodyWeight) mdContent += `體重:: ${bodyWeight}\n`;
+                if (bodyWaist) mdContent += `腰圍:: ${bodyWaist}\n`;
+                if (bodyHip) mdContent += `臀圍:: ${bodyHip}\n`;
+            }
+
             // 情緒日記
             mdContent += addKeyValueSection('情緒日記', [
                 { id: 'emotion_event', label: '事件' },
                 { id: 'emotion_reaction', label: '情緒反應' },
-                { id: 'emotion_response', label: '更清晰恰當表達情緒的回應是' }
+                { id: 'emotion_response', label: '更清晰恰当表达情绪的回應是' }
             ]);
+
+            // 待辦事項
+            const todoImportant = document.getElementById('todo_important').value.trim();
+            const todoDaily = document.getElementById('todo_daily').value.trim();
+            const todoMisc = document.getElementById('todo_misc').value.trim();
+            if (todoImportant || todoDaily || todoMisc) {
+                mdContent += `\n---\n# 待辦事項\n`;
+                if (todoImportant) mdContent += `## 重要長期目標\n\n${todoImportant}\n\n`;
+                if (todoDaily) mdContent += `## 日常必要推進\n\n${todoDaily}\n\n`;
+                if (todoMisc) mdContent += `## 瑣事\n${todoMisc}\n`;
+            }
 
             // 清理開頭可能多餘的換行
             mdContent = mdContent.trim();
@@ -401,7 +612,7 @@
 
         function clearAll() {
             if (confirm('確定要清空所有欄位嗎？')) {
-                document.querySelectorAll('input[type="text"], textarea').forEach(el => {
+                document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(el => {
                     el.value = '';
                 });
                 document.getElementById('output').style.display = 'none';
