@@ -34,8 +34,14 @@
         h1 {
             text-align: center;
             color: #213357;
-            margin: 0 0 15px 0;
+            margin: 0 0 8px 0;
             font-size: 1.5em;
+        }
+        .subtitle {
+            color: #808080;
+            font-size: 0.85em;
+            margin: 0 0 15px 0;
+            line-height: 1.5;
         }
         h2 {
             text-align: center;
@@ -99,6 +105,21 @@
         }
         button:active {
             transform: scale(0.98);
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .button-group button {
+            flex: 1;
+        }
+        .btn-secondary {
+            background-color: #808080;
+            box-shadow: 0 2px 6px rgba(128, 128, 128, 0.2);
+        }
+        .btn-secondary:hover {
+            background-color: #3A3A3A;
         }
         hr {
             margin: 12px 0;
@@ -285,12 +306,17 @@
 
     <div class="container">
         <h1>文字拖曳排序工具</h1>
+        <p class="subtitle">透過直覺的拖曳操作，輕鬆重新排列文字項目順序。適合整理待辦事項、編排大綱或任何需要排序的文字內容。</p>
 
         <div class="main-content">
             <div class="input-section">
-                <h2>1. 貼上你的文字</h2>
+                <h2>1. 貼上或輸入你的文字</h2>
                 <div class="input-wrapper">
-                    <textarea id="text-input" placeholder="在這裡貼上你的文字，每個項目佔一行..."></textarea>
+                    <textarea id="text-input" placeholder="在這裡貼上或輸入你的文字，每個項目佔一行..."></textarea>
+                    <div class="button-group">
+                        <button class="btn-secondary" id="paste-button">貼上</button>
+                        <button class="btn-secondary" id="clear-button">清空</button>
+                    </div>
                     <button id="generate-list-button">生成可拖曳列表</button>
                 </div>
             </div>
@@ -318,6 +344,25 @@
         const outputContainer = document.getElementById('output-container');
         const copyButton = document.getElementById('copy-button');
         const feedbackMessage = document.getElementById('feedback-message');
+
+        // 貼上按鈕功能
+        const pasteButton = document.getElementById('paste-button');
+        pasteButton.addEventListener('click', async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                textInput.value = text;
+            } catch (err) {
+                alert('無法讀取剪貼簿內容，請手動貼上。');
+            }
+        });
+
+        // 清空按鈕功能
+        const clearButton = document.getElementById('clear-button');
+        clearButton.addEventListener('click', () => {
+            textInput.value = '';
+            sortableList.innerHTML = '';
+            outputContainer.style.display = 'none';
+        });
 
         // 步驟 1: 點擊按鈕，生成列表
         generateListButton.addEventListener('click', () => {
