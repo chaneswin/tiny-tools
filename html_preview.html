@@ -244,10 +244,16 @@
             updatePreview();
         });
 
+        // 初始化 Shadow DOM
+        let shadowRoot = previewContainer.shadowRoot;
+        if (!shadowRoot) {
+            shadowRoot = previewContainer.attachShadow({ mode: 'open' });
+        }
+
         // 更新預覽內容
         function updatePreview() {
             const htmlCode = htmlInput.value;
-            previewContainer.innerHTML = htmlCode;
+            shadowRoot.innerHTML = htmlCode;
         }
 
         // 設定預覽模式
