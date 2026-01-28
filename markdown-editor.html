@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>專業 Markdown 編輯器 - Tiny Tools</title>
+    <!-- 引入 Vditor 的 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vditor/dist/index.css" />
+    <style>
+        :root {
+            --primary-color: #0366d6;
+            --bg-color: #f6f8fa;
+            --border-color: #d1d5da;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        }
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background-color: #24292e;
+            color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            z-index: 100;
+        }
+        .logo {
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-primary { background-color: #28a745; color: white; }
+        .btn-primary:hover { background-color: #218838; }
+        .btn-secondary { background-color: #e1e4e8; color: #24292e; }
+        .btn-secondary:hover { background-color: #d1d5da; }
+        .btn-outline { background-color: transparent; border: 1px solid #e1e4e8; color: #e1e4e8; }
+        .btn-outline:hover { background-color: rgba(255,255,255,0.1); }
+        
+        #vditor-wrapper {
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        /* 隱藏預設檔案輸入 */
+        #file-input { display: none; }
+
+        /* 提示訊息樣式 */
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #24292e;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <header>
+        <div class="logo">
+            <span>📝 Markdown Editor</span>
+        </div>
+        <div class="actions">
+            <button class="btn btn-outline" onclick="document.getElementById('file-input').click()">
+                📂 載入檔案
+            </button>
+            <input type="file" id="file-input" accept=".md,.txt" onchange="handleFileUpload(event)">
+            <button class="btn btn-secondary" onclick="copyToClipboard()">
+                📋 複製內容
+            </button>
+            <button class="btn btn-primary" onclick="downloadMarkdown()">
+                💾 下載 .md
+            </button>
+            <button class="btn btn-secondary" style="background-color: #f85149; color: white;" onclick="resetEditor()">
+                🗑️ 清除
+            </button>
+        </div>
+    </header>
+
+    <div id="vditor-wrapper">
+        <div id="vditor"></div>
+    </div>
+</div>
+
+<div id="toast">已複製到剪貼簿</div>
+
+<!-- 引入 Vditor JS -->
+<script src="https://cdn.jsdelivr.net/npm/vditor/dist/index.min.js"></script>
+
+<script>
+    let vditor;
+    let currentFileName = 'untitled.md';
+
+    // 初始化 Vditor
+    window.onload = () => {
+        vditor = new Vditor('vditor', {
+            height: '100%',
+            mode: 'sv', // 即時預覽模式
+            theme: 'classic',
+            icon: 'ant-design',
+            placeholder: '在此輸入 Markdown 內容，或拖曳檔案到這裡...',
+            outline: {
+                enable: true,
+                position: 'left',
+            },
+            toolbarConfig: {
+                pin: true,
+            },
+            cache: {
+                enable: false, // 關閉快取，實現用完即走
+            },
+            preview: {
+                delay: 100,
+                hljs: { style: 'github' },
+                actions: ["desktop", "tablet", "mobile", "outline", "both", "preview"]
+            },
+            after: () => {
+                console.log('Vditor initialized');
+                // 設置初始內容（可選）
+                const welcomeText = "# 歡迎使用 Markdown 編輯器\n\n您可以：\n1. **點擊上方按鈕** 載入本地檔案\n2. **直接拖曳** 檔案到此區域\n3. **即時預覽** 並使用左側大綱導航\n\n---\n\n### 測試摺疊功能\n點擊標題左側的小箭頭即可摺疊區塊。";
+                vditor.setValue(welcomeText);
+            }
+        });
+
+        // 監聽拖曳事件
+        const wrapper = document.getElementById('vditor-wrapper');
+        wrapper.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        wrapper.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+    };
+
+    // 處理檔案上傳
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        handleFile(file);
+    }
+
+    function handleFile(file) {
+        if (!file) return;
+        if (!file.name.endsWith('.md') && !file.name.endsWith('.txt')) {
+            showToast('僅支援 .md 或 .txt 檔案');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            vditor.setValue(e.target.result);
+            currentFileName = file.name;
+            showToast(`已載入: ${file.name}`);
+        };
+        reader.readAsText(file);
+    }
+
+    // 複製到剪貼簿
+    function copyToClipboard() {
+        const content = vditor.getValue();
+        navigator.clipboard.writeText(content).then(() => {
+            showToast('已複製到剪貼簿');
+        }).catch(err => {
+            console.error('無法複製: ', err);
+        });
+    }
+
+    // 下載檔案
+    function downloadMarkdown() {
+        const content = vditor.getValue();
+        const blob = new Blob([content], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = currentFileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('檔案已準備下載');
+    }
+
+    // 重置編輯器
+    function resetEditor() {
+        if (confirm('確定要清除所有內容嗎？')) {
+            vditor.setValue('');
+            currentFileName = 'untitled.md';
+            showToast('已重置');
+        }
+    }
+
+    // 顯示提示訊息
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.style.opacity = '1';
+        setTimeout(() => {
+            toast.style.opacity = '0';
+        }, 2000);
+    }
+</script>
+
+</body>
+</html>
