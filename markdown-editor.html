@@ -127,7 +127,6 @@
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 90, 135, 0.1);
             overflow: hidden;
-            border-left: 4px solid #005A87;
         }
 
         #vditor {
@@ -172,8 +171,21 @@
             background: #E8F4F8 !important;
         }
 
-        .vditor-toolbar svg {
+        /* 工具列 SVG 圖示顏色 */
+        .vditor-toolbar svg,
+        .vditor-toolbar__item svg,
+        .vditor-toolbar__item button svg,
+        .vditor-ir__marker svg,
+        .vditor-panel svg {
             fill: #005A87 !important;
+            color: #005A87 !important;
+        }
+
+        /* 工具列按鈕文字顏色 */
+        .vditor-toolbar__item,
+        .vditor-toolbar__item button,
+        .vditor-toolbar__item span {
+            color: #005A87 !important;
         }
 
         .vditor-toolbar .vditor-tooltipped::after {
