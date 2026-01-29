@@ -3,118 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業 Markdown 編輯器 - Tiny Tools</title>
+    <title>Markdown 編輯器 - 小工具集合</title>
     <!-- 引入 Vditor 的 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vditor/dist/index.css" />
     <style>
-        :root {
-            --primary-color: #0366d6;
-            --bg-color: #f6f8fa;
-            --border-color: #d1d5da;
-        }
-        html, body {
+        * {
             margin: 0;
             padding: 0;
-            height: 100%;
-            overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            box-sizing: border-box;
         }
-        #app {
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+            background: linear-gradient(135deg, #FCFEFF 0%, #E8F4F8 100%);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            height: 100vh;
         }
-        header {
+
+        .header {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 90, 135, 0.1);
+            padding: 15px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 16px;
-            background-color: #24292e;
-            color: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-            z-index: 100;
+            flex-wrap: wrap;
+            gap: 15px;
         }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-link {
+            color: #005A87;
+            text-decoration: none;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
         .logo {
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #005A87;
             display: flex;
             align-items: center;
             gap: 8px;
         }
+
         .actions {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
+
         .btn {
-            padding: 6px 12px;
-            border-radius: 4px;
+            padding: 8px 16px;
+            border-radius: 8px;
             border: none;
             cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: background 0.2s;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
         }
-        .btn-primary { background-color: #28a745; color: white; }
-        .btn-primary:hover { background-color: #218838; }
-        .btn-secondary { background-color: #e1e4e8; color: #24292e; }
-        .btn-secondary:hover { background-color: #d1d5da; }
-        .btn-outline { background-color: transparent; border: 1px solid #e1e4e8; color: #e1e4e8; }
-        .btn-outline:hover { background-color: rgba(255,255,255,0.1); }
-        
+
+        .btn-primary {
+            background: #005A87;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #004466;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 90, 135, 0.3);
+        }
+
+        .btn-secondary {
+            background: #E8F4F8;
+            color: #005A87;
+            border: 2px solid #005A87;
+        }
+
+        .btn-secondary:hover {
+            background: #005A87;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #B35A1E;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #8B4517;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(179, 90, 30, 0.3);
+        }
+
         #vditor-wrapper {
             flex: 1;
             overflow: hidden;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
         }
-        
+
+        #vditor-container {
+            width: 100%;
+            max-width: 1400px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 90, 135, 0.1);
+            overflow: hidden;
+            border-left: 4px solid #005A87;
+        }
+
+        #vditor {
+            height: 100%;
+        }
+
         /* 隱藏預設檔案輸入 */
-        #file-input { display: none; }
+        #file-input {
+            display: none;
+        }
 
         /* 提示訊息樣式 */
         #toast {
             position: fixed;
-            bottom: 20px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: #24292e;
+            background: #005A87;
             color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
             opacity: 0;
             transition: opacity 0.3s;
             pointer-events: none;
             z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 90, 135, 0.3);
+        }
+
+        /* Vditor 主題客製化 */
+        .vditor-toolbar {
+            background: #FCFEFF !important;
+            border-bottom: 2px solid #E8F4F8 !important;
+        }
+
+        .vditor-toolbar button:hover {
+            background: #E8F4F8 !important;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-left {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .actions {
+                width: 100%;
+            }
+
+            .btn {
+                flex: 1;
+                justify-content: center;
+            }
+
+            #vditor-wrapper {
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.1em;
+            }
+
+            .btn {
+                font-size: 0.85em;
+                padding: 6px 12px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
 
-<div id="app">
-    <header>
+<div class="header">
+    <div class="header-left">
+        <a href="index.html" class="back-link">← 返回首頁</a>
         <div class="logo">
-            <span>📝 Markdown Editor</span>
+            <span>📝</span>
+            <span>Markdown 編輯器</span>
         </div>
-        <div class="actions">
-            <button class="btn btn-outline" onclick="document.getElementById('file-input').click()">
-                📂 載入檔案
-            </button>
-            <input type="file" id="file-input" accept=".md,.txt" onchange="handleFileUpload(event)">
-            <button class="btn btn-secondary" onclick="copyToClipboard()">
-                📋 複製內容
-            </button>
-            <button class="btn btn-primary" onclick="downloadMarkdown()">
-                💾 下載 .md
-            </button>
-            <button class="btn btn-secondary" style="background-color: #f85149; color: white;" onclick="resetEditor()">
-                🗑️ 清除
-            </button>
-        </div>
-    </header>
+    </div>
+    <div class="actions">
+        <button class="btn btn-secondary" onclick="document.getElementById('file-input').click()">
+            📂 載入檔案
+        </button>
+        <input type="file" id="file-input" accept=".md,.txt" onchange="handleFileUpload(event)">
+        <button class="btn btn-primary" onclick="copyToClipboard()">
+            📋 複製內容
+        </button>
+        <button class="btn btn-primary" onclick="downloadMarkdown()">
+            💾 下載 .md
+        </button>
+        <button class="btn btn-danger" onclick="resetEditor()">
+            🗑️ 清除
+        </button>
+    </div>
+</div>
 
-    <div id="vditor-wrapper">
+<div id="vditor-wrapper">
+    <div id="vditor-container">
         <div id="vditor"></div>
     </div>
 </div>
@@ -153,8 +277,56 @@
             },
             after: () => {
                 console.log('Vditor initialized');
-                // 設置初始內容（可選）
-                const welcomeText = "# 歡迎使用 Markdown 編輯器\n\n您可以：\n1. **點擊上方按鈕** 載入本地檔案\n2. **直接拖曳** 檔案到此區域\n3. **即時預覽** 並使用左側大綱導航\n\n---\n\n### 測試摺疊功能\n點擊標題左側的小箭頭即可摺疊區塊。";
+                // 設置初始內容
+                const welcomeText = `# 歡迎使用 Markdown 編輯器
+
+這是一個專業級的 Markdown 編輯與預覽工具，具備以下功能：
+
+## 核心功能
+
+### 📂 檔案操作
+- **載入檔案**：點擊上方按鈕或直接拖曳 .md 檔案到編輯區
+- **複製內容**：一鍵將 Markdown 原始碼複製到剪貼簿
+- **下載檔案**：將編輯內容匯出為 .md 檔案
+
+### 📝 編輯體驗
+- **三欄佈局**：左側大綱導航、中間編輯區、右側即時預覽
+- **即時預覽**：所見即所得的編輯體驗
+- **語法支援**：完整支援 GitHub Flavored Markdown (GFM)
+
+### 🎯 進階功能
+- **大綱導航**：自動生成標題目錄，點擊快速跳轉
+- **摺疊功能**：點擊標題左側箭頭可摺疊區塊
+- **同步滾動**：編輯區與預覽區自動同步
+
+---
+
+## 快速開始
+
+1. 點擊上方「📂 載入檔案」按鈕選擇本地 .md 檔案
+2. 或直接在此編輯區輸入 Markdown 內容
+3. 使用左側大綱快速導航到不同章節
+4. 編輯完成後，點擊「💾 下載 .md」儲存結果
+
+---
+
+## 測試摺疊功能
+
+### 第一章節
+這是第一章節的內容。點擊標題左側的小箭頭可以摺疊這個區塊。
+
+### 第二章節
+這是第二章節的內容。
+
+#### 子章節 2.1
+這是一個子章節。
+
+#### 子章節 2.2
+這是另一個子章節。
+
+---
+
+**提示**：所有資料僅在您的瀏覽器中處理，不會上傳到任何伺服器，確保隱私安全。`;
                 vditor.setValue(welcomeText);
             }
         });
@@ -203,6 +375,7 @@
             showToast('已複製到剪貼簿');
         }).catch(err => {
             console.error('無法複製: ', err);
+            showToast('複製失敗，請手動複製');
         });
     }
 
