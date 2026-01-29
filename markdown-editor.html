@@ -285,7 +285,13 @@
             preview: {
                 delay: 100,
                 hljs: { style: 'github' },
-                actions: ["desktop", "tablet", "mobile", "outline", "both", "preview"]
+                actions: ["desktop", "tablet", "mobile", "outline", "both", "preview"],
+                markdown: {
+                    toc: true,
+                    mark: true,
+                    footnotes: true,
+                    autoSpace: true
+                }
             },
             after: () => {
                 console.log('Vditor initialized');
