@@ -258,6 +258,37 @@
                 flex-direction: column;
             }
         }
+
+        /* 超高優先級：強制工具列圖示可見 */
+        div.vditor div.vditor-toolbar button svg,
+        div.vditor div.vditor-toolbar div.vditor-toolbar__item button svg,
+        div.vditor div.vditor-toolbar div.vditor-toolbar__item svg,
+        div#vditor div.vditor-toolbar button svg,
+        div#vditor div.vditor-toolbar svg,
+        div.vditor div.vditor-toolbar button svg use,
+        div.vditor div.vditor-toolbar svg use {
+            fill: #005A87 !important;
+            color: #005A87 !important;
+            stroke: #005A87 !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        div.vditor div.vditor-toolbar button,
+        div.vditor div.vditor-toolbar div.vditor-toolbar__item button,
+        div#vditor div.vditor-toolbar button {
+            color: #005A87 !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        /* 確保工具列本身可見 */
+        div.vditor div.vditor-toolbar,
+        div#vditor div.vditor-toolbar {
+            background: #FCFEFF !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
     </style>
 </head>
 <body>
@@ -306,9 +337,9 @@
     window.onload = () => {
         vditor = new Vditor('vditor', {
             height: '100%',
-            mode: 'sv', // 即時預覽模式
+            mode: 'ir', // 即時渲染模式（解決 iframe 和 SVG 問題）
             theme: 'classic',
-            icon: 'ant-design',
+            icon: 'material',  // 嘗試使用不同的圖示集
             placeholder: '在此輸入 Markdown 內容，或拖曳檔案到這裡...',
             outline: {
                 enable: true,
