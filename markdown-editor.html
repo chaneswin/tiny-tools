@@ -180,6 +180,32 @@
             color: white !important;
         }
 
+        /* 折疊功能樣式 */
+        .fold-toggle {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.2s;
+            color: #005A87;
+            font-weight: bold;
+            vertical-align: middle;
+        }
+
+        .fold-toggle:hover {
+            color: #004466;
+        }
+
+        .fold-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .folded-content {
+            display: none;
+        }
+
         /* 響應式設計 */
         @media (max-width: 768px) {
             .header {
@@ -430,6 +456,117 @@
             toast.style.opacity = '0';
         }, 2000);
     }
+
+    // ========== 折疊功能模組 ==========
+    
+    // 儲存折疊狀態，以標題文本為 key
+    const foldState = new Map();
+
+    // 初始化預覽區折疊功能
+    function initPreviewFolding() {
+        // 使用 MutationObserver 監聽預覽區更新
+        const previewElement = document.querySelector('.vditor-preview');
+        if (!previewElement) {
+            // 如果還沒有預覽區，稍後再試
+            setTimeout(initPreviewFolding, 500);
+            return;
+        }
+
+        // 初次添加折疊按鈕
+        addFoldButtons();
+
+        // 監聽 DOM 變化
+        const observer = new MutationObserver(() => {
+            addFoldButtons();
+        });
+
+        observer.observe(previewElement, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    // 為所有標題添加折疊按鈕
+    function addFoldButtons() {
+        const previewElement = document.querySelector('.vditor-preview__content');
+        if (!previewElement) return;
+
+        const headings = previewElement.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        
+        headings.forEach(heading => {
+            // 如果已經有折疊按鈕，跳過
+            if (heading.querySelector('.fold-toggle')) return;
+
+            // 創建折疊按鈕
+            const toggle = document.createElement('span');
+            toggle.className = 'fold-toggle';
+            toggle.textContent = '▼'; // 下箭頭
+            toggle.setAttribute('role', 'button');
+            toggle.setAttribute('aria-label', '折疊/展開');
+
+            // 添加點擊事件
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFold(heading, toggle);
+            });
+
+            // 將按鈕插入標題開頭
+            heading.insertBefore(toggle, heading.firstChild);
+
+            // 恢復之前的折疊狀態
+            const headingText = heading.textContent.replace('▼', '').replace('▶', '').trim();
+            if (foldState.get(headingText)) {
+                toggleFold(heading, toggle, true);
+            }
+        });
+    }
+
+    // 切換折疊狀態
+    function toggleFold(heading, toggle, skipStateUpdate = false) {
+        const headingLevel = parseInt(heading.tagName.substring(1)); // h1 -> 1, h2 -> 2, ...
+        const isCollapsed = toggle.classList.contains('collapsed');
+
+        // 切換按鈕狀態
+        toggle.classList.toggle('collapsed');
+        toggle.textContent = isCollapsed ? '▼' : '▶'; // 切換箭頭方向
+
+        // 找出需要折疊的內容：從當前標題到下一個同級或更高級標題之間的所有元素
+        const elementsToFold = [];
+        let nextElement = heading.nextElementSibling;
+
+        while (nextElement) {
+            // 如果遇到同級或更高級的標題，停止
+            if (nextElement.tagName && nextElement.tagName.match(/^H[1-6]$/)) {
+                const nextLevel = parseInt(nextElement.tagName.substring(1));
+                if (nextLevel <= headingLevel) {
+                    break;
+                }
+            }
+            elementsToFold.push(nextElement);
+            nextElement = nextElement.nextElementSibling;
+        }
+
+        // 切換顯示/隱藏
+        elementsToFold.forEach(el => {
+            if (isCollapsed) {
+                el.classList.remove('folded-content');
+            } else {
+                el.classList.add('folded-content');
+            }
+        });
+
+        // 儲存折疊狀態
+        if (!skipStateUpdate) {
+            const headingText = heading.textContent.replace('▼', '').replace('▶', '').trim();
+            foldState.set(headingText, !isCollapsed);
+        }
+    }
+
+    // 在 Vditor 初始化完成後啟動折疊功能
+    setTimeout(() => {
+        initPreviewFolding();
+    }, 1000);
+    // ========== 折疊功能模組結束 ==========
 </script>
 
 </body>
