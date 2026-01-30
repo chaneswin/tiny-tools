@@ -312,6 +312,9 @@
         <button class="btn btn-primary" onclick="downloadMarkdown()">
             💾 下載 .md
         </button>
+        <button class="btn btn-primary" onclick="downloadPDF()">
+            📄 下載 PDF
+        </button>
         <button class="btn btn-danger" onclick="resetEditor()">
             🗑️ 清除
         </button>
@@ -466,7 +469,7 @@
         });
     }
 
-    // 下載檔案
+    // 下載 Markdown 檔案
     function downloadMarkdown() {
         const content = vditor.getValue();
         const blob = new Blob([content], { type: 'text/markdown' });
@@ -479,6 +482,150 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         showToast('檔案已準備下載');
+    }
+
+    // 下載 PDF 檔案（使用瀏覽器列印功能）
+    async function downloadPDF() {
+        showToast('正在生成 PDF，請稍候...');
+        
+        try {
+            // 獲取 Markdown 渲染後的 HTML 內容
+            const htmlContent = vditor.getHTML();
+            
+            // 創建一個隱藏的 iframe 來渲染 PDF
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'absolute';
+            iframe.style.width = '210mm'; // A4 寬度
+            iframe.style.height = '297mm'; // A4 高度
+            iframe.style.left = '-9999px';
+            document.body.appendChild(iframe);
+            
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            
+            // 寫入 HTML 內容和樣式
+            iframeDoc.open();
+            iframeDoc.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>${currentFileName.replace('.md', '')}</title>
+                    <style>
+                        @page {
+                            size: A4;
+                            margin: 20mm;
+                        }
+                        body {
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+                            line-height: 1.6;
+                            color: #333;
+                            max-width: 100%;
+                            margin: 0;
+                            padding: 20px;
+                        }
+                        h1, h2, h3, h4, h5, h6 {
+                            color: #005A87;
+                            margin-top: 24px;
+                            margin-bottom: 16px;
+                            font-weight: 600;
+                            line-height: 1.25;
+                        }
+                        h1 { font-size: 2em; border-bottom: 2px solid #005A87; padding-bottom: 0.3em; }
+                        h2 { font-size: 1.5em; border-bottom: 1px solid #e8e8e8; padding-bottom: 0.3em; }
+                        h3 { font-size: 1.25em; }
+                        h4 { font-size: 1em; }
+                        h5 { font-size: 0.875em; }
+                        h6 { font-size: 0.85em; color: #6a737d; }
+                        p { margin-bottom: 16px; }
+                        a { color: #005A87; text-decoration: none; }
+                        a:hover { text-decoration: underline; }
+                        code {
+                            background-color: #f6f8fa;
+                            padding: 0.2em 0.4em;
+                            margin: 0;
+                            font-size: 85%;
+                            border-radius: 3px;
+                            font-family: 'Courier New', Courier, monospace;
+                        }
+                        pre {
+                            background-color: #f6f8fa;
+                            padding: 16px;
+                            overflow: auto;
+                            font-size: 85%;
+                            line-height: 1.45;
+                            border-radius: 3px;
+                            margin-bottom: 16px;
+                        }
+                        pre code {
+                            background-color: transparent;
+                            padding: 0;
+                        }
+                        blockquote {
+                            padding: 0 1em;
+                            color: #6a737d;
+                            border-left: 0.25em solid #dfe2e5;
+                            margin: 0 0 16px 0;
+                        }
+                        ul, ol {
+                            padding-left: 2em;
+                            margin-bottom: 16px;
+                        }
+                        li { margin-bottom: 0.25em; }
+                        table {
+                            border-collapse: collapse;
+                            width: 100%;
+                            margin-bottom: 16px;
+                        }
+                        table th, table td {
+                            padding: 6px 13px;
+                            border: 1px solid #dfe2e5;
+                        }
+                        table th {
+                            background-color: #f6f8fa;
+                            font-weight: 600;
+                        }
+                        table tr:nth-child(2n) {
+                            background-color: #f6f8fa;
+                        }
+                        img {
+                            max-width: 100%;
+                            height: auto;
+                            display: block;
+                            margin: 16px 0;
+                        }
+                        hr {
+                            height: 0.25em;
+                            padding: 0;
+                            margin: 24px 0;
+                            background-color: #e1e4e8;
+                            border: 0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${htmlContent}
+                </body>
+                </html>
+            `);
+            iframeDoc.close();
+            
+            // 等待圖片載入
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // 觸發列印對話框
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            
+            // 清理 iframe
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 100);
+            
+            showToast('PDF 已準備下載，請在列印對話框中選擇「儲存為 PDF」');
+        } catch (error) {
+            console.error('PDF 生成失敗:', error);
+            showToast('PDF 生成失敗，請再試一次');
+        }
     }
 
     // 重置編輯器
