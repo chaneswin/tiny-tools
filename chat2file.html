@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -11,7 +10,7 @@
         h1 { text-align: center; color: #1a1a1a; }
         .section { margin-bottom: 20px; }
         h2 { font-size: 16px; color: #444; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
-        #editor { border: 1px solid #ddd; min-height: 200px; padding: 15px; border-radius: 4px; background-color: #fff; line-height: 1.6; }
+        #editor { border: 1px solid #ddd; min-height: 200px; padding: 15px; border-radius: 4px; background-color: #fff; line-height: 1.6; white-space: pre-wrap; }
         #editor:focus { border-color: #007aff; outline: none; box-shadow: 0 0 0 2px rgba(0,122,255,0.2); }
         #image-upload-area { border: 2px dashed #ddd; padding: 20px; text-align: center; border-radius: 4px; cursor: pointer; }
         #image-upload-area.hover { border-color: #007aff; background-color: #f0f8ff; }
@@ -50,10 +49,10 @@
         <div id="status"></div>
     </div>
 
-    <!-- 本地化的開源函式庫 -->
-    <script src="./libs/pdf-lib.min.js"></script>
-    <script src="./libs/docx.umd.js"></script>
-    <script src="./libs/jszip.min.js"></script>
+    <!-- 使用大陸可訪問的 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
     <script>
         // ============================================
@@ -153,27 +152,100 @@
             status.textContent = '正在生成 PDF...';
 
             try {
-                const { PDFDocument, rgb } = PDFLib;
+                const { PDFDocument, rgb, StandardFonts } = PDFLib;
                 const pdfDoc = await PDFDocument.create();
                 const page = pdfDoc.addPage();
                 const { width, height } = page.getSize();
+                const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-                // 簡單的文字輸出（暫時不支援複雜排版）
+                // 提取文字內容
                 const content = getEditorContent();
-                const text = content.replace(/<[^>]*>/g, ''); // 移除 HTML 標籤
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = content;
+                
+                let yPosition = height - 50;
+                const lineHeight = 20;
+                const margin = 50;
 
-                page.drawText(text, {
-                    x: 50,
-                    y: height - 100,
-                    size: 12,
-                    color: rgb(0, 0, 0),
-                    maxWidth: width - 100
-                });
+                // 遍歷所有節點
+                for (let node of tempDiv.childNodes) {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const text = node.textContent.trim();
+                        if (text) {
+                            const lines = text.split('\n');
+                            for (let line of lines) {
+                                if (yPosition < 50) {
+                                    const newPage = pdfDoc.addPage();
+                                    yPosition = newPage.getSize().height - 50;
+                                }
+                                page.drawText(line, {
+                                    x: margin,
+                                    y: yPosition,
+                                    size: 12,
+                                    font: font,
+                                    color: rgb(0, 0, 0),
+                                    maxWidth: width - 2 * margin
+                                });
+                                yPosition -= lineHeight;
+                            }
+                        }
+                    } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'IMG') {
+                        const src = node.getAttribute('src');
+                        if (src && src.startsWith('data:')) {
+                            try {
+                                const imageBytes = await fetch(src).then(res => res.arrayBuffer());
+                                let image;
+                                if (src.includes('image/png')) {
+                                    image = await pdfDoc.embedPng(imageBytes);
+                                } else {
+                                    image = await pdfDoc.embedJpg(imageBytes);
+                                }
+                                
+                                const imgWidth = Math.min(image.width, width - 2 * margin);
+                                const imgHeight = (image.height / image.width) * imgWidth;
+                                
+                                if (yPosition - imgHeight < 50) {
+                                    const newPage = pdfDoc.addPage();
+                                    yPosition = newPage.getSize().height - 50;
+                                }
+                                
+                                page.drawImage(image, {
+                                    x: margin,
+                                    y: yPosition - imgHeight,
+                                    width: imgWidth,
+                                    height: imgHeight
+                                });
+                                yPosition -= imgHeight + 20;
+                            } catch (err) {
+                                console.error('圖片嵌入失敗:', err);
+                            }
+                        }
+                    } else if (node.textContent && node.textContent.trim()) {
+                        const text = node.textContent.trim();
+                        const lines = text.split('\n');
+                        for (let line of lines) {
+                            if (yPosition < 50) {
+                                const newPage = pdfDoc.addPage();
+                                yPosition = newPage.getSize().height - 50;
+                            }
+                            page.drawText(line, {
+                                x: margin,
+                                y: yPosition,
+                                size: 12,
+                                font: font,
+                                color: rgb(0, 0, 0),
+                                maxWidth: width - 2 * margin
+                            });
+                            yPosition -= lineHeight;
+                        }
+                    }
+                }
 
                 const pdfBytes = await pdfDoc.save();
-                downloadFile(pdfBytes, 'export.pdf', 'application/pdf');
+                downloadFile(pdfBytes, 'wechat_export.pdf', 'application/pdf');
                 status.textContent = 'PDF 已下載';
             } catch (error) {
+                console.error(error);
                 status.textContent = `錯誤: ${error.message}`;
             }
         }
@@ -196,10 +268,15 @@
                     if (node.nodeType === Node.TEXT_NODE) {
                         const text = node.textContent.trim();
                         if (text) {
-                            paragraphs.push(new Paragraph({
-                                text: text,
-                                spacing: { line: 360 }
-                            }));
+                            const lines = text.split('\n');
+                            for (let line of lines) {
+                                if (line.trim()) {
+                                    paragraphs.push(new Paragraph({
+                                        children: [new TextRun(line)],
+                                        spacing: { line: 360 }
+                                    }));
+                                }
+                            }
                         }
                     } else if (node.nodeType === Node.ELEMENT_NODE) {
                         if (node.tagName === 'IMG') {
@@ -217,18 +294,23 @@
                                         new ImageRun({
                                             data: bytes,
                                             transformation: {
-                                                width: 200,
-                                                height: 200
+                                                width: 400,
+                                                height: 300
                                             }
                                         })
                                     ]
                                 }));
                             }
                         } else if (node.textContent.trim()) {
-                            paragraphs.push(new Paragraph({
-                                text: node.textContent.trim(),
-                                spacing: { line: 360 }
-                            }));
+                            const lines = node.textContent.trim().split('\n');
+                            for (let line of lines) {
+                                if (line.trim()) {
+                                    paragraphs.push(new Paragraph({
+                                        children: [new TextRun(line)],
+                                        spacing: { line: 360 }
+                                    }));
+                                }
+                            }
                         }
                     }
                 }
@@ -240,9 +322,10 @@
                 });
 
                 const blob = await Packer.toBlob(docxDoc);
-                downloadFile(blob, 'export.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+                downloadFile(blob, 'wechat_export.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
                 status.textContent = 'Word 文件已下載';
             } catch (error) {
+                console.error(error);
                 status.textContent = `錯誤: ${error.message}`;
             }
         }
@@ -257,13 +340,26 @@
                 const content = getEditorContent();
 
                 // 提取文字內容並生成 Markdown
-                const text = content.replace(/<img[^>]*>/g, (match) => {
-                    const src = match.match(/src="([^"]*)"/)[1];
-                    const alt = match.match(/alt="([^"]*)"/)[1];
-                    return `![${alt}](./${alt})`;
-                }).replace(/<[^>]*>/g, '');
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = content;
+                let markdown = '# 微信聊天記錄\n\n';
 
-                const markdown = `# 微信聊天記錄\n\n${text}`;
+                for (let node of tempDiv.childNodes) {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const text = node.textContent.trim();
+                        if (text) {
+                            markdown += text + '\n\n';
+                        }
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        if (node.tagName === 'IMG') {
+                            const alt = node.getAttribute('alt') || 'image';
+                            markdown += `![${alt}](./${alt})\n\n`;
+                        } else if (node.textContent.trim()) {
+                            markdown += node.textContent.trim() + '\n\n';
+                        }
+                    }
+                }
+
                 zip.file('content.md', markdown);
 
                 // 添加圖片到 ZIP
@@ -273,9 +369,10 @@
                 }
 
                 const blob = await zip.generateAsync({ type: 'blob' });
-                downloadFile(blob, 'export.zip', 'application/zip');
+                downloadFile(blob, 'wechat_export.zip', 'application/zip');
                 status.textContent = 'ZIP 檔案已下載';
             } catch (error) {
+                console.error(error);
                 status.textContent = `錯誤: ${error.message}`;
             }
         }
