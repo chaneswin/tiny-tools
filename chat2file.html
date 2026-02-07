@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>微信聊天內容匯出工具</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; background-color: #f7f7f7; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif; margin: 0; padding: 20px; background-color: #f7f7f7; color: #333; }
         .container { max-width: 800px; margin: 0 auto; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #1a1a1a; }
         .section { margin-bottom: 20px; }
         h2 { font-size: 16px; color: #444; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
         #editor { border: 1px solid #ddd; min-height: 200px; padding: 15px; border-radius: 4px; background-color: #fff; line-height: 1.6; white-space: pre-wrap; }
         #editor:focus { border-color: #007aff; outline: none; box-shadow: 0 0 0 2px rgba(0,122,255,0.2); }
+        #editor img { max-width: 100%; height: auto; margin: 10px 0; border-radius: 4px; display: block; }
         #image-upload-area { border: 2px dashed #ddd; padding: 20px; text-align: center; border-radius: 4px; cursor: pointer; }
         #image-upload-area.hover { border-color: #007aff; background-color: #f0f8ff; }
         #image-upload-area p { margin: 0; color: #888; }
@@ -20,6 +21,15 @@
         .btn:hover { background-color: #005bb5; }
         .btn:disabled { background-color: #ccc; cursor: not-allowed; }
         #status { text-align: center; margin-top: 20px; color: #666; }
+        
+        /* 列印樣式 */
+        @media print {
+            body { background-color: #fff; padding: 0; }
+            .container { box-shadow: none; padding: 20px; }
+            .section:nth-child(2), .button-group, #status { display: none; }
+            h1, h2 { page-break-after: avoid; }
+            #editor { border: none; }
+        }
     </style>
 </head>
 <body>
@@ -50,7 +60,6 @@
     </div>
 
     <!-- 使用大陸可訪問的 CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
@@ -132,122 +141,17 @@
             html = html.replace(pattern, (match, filename) => {
                 filename = filename.trim();
                 if (uploadedImages[filename]) {
-                    return `<img src="${uploadedImages[filename].dataUrl}" style="max-width: 100%; height: auto; margin: 10px 0; border-radius: 4px;" alt="${filename}">`;
+                    return `<img src="${uploadedImages[filename].dataUrl}" alt="${filename}" data-filename="${filename}">`;
                 }
-                return match; // 如果找不到對應圖片，保持原樣
+                return match;
             });
 
             editor.innerHTML = html;
         }
 
-        // ============ 提取編輯器內容（含圖片） ============
-        function getEditorContent() {
-            const editor = document.getElementById('editor');
-            return editor.innerHTML;
-        }
-
-        // ============ 匯出為 PDF ============
-        async function exportToPdf() {
-            const status = document.getElementById('status');
-            status.textContent = '正在生成 PDF...';
-
-            try {
-                const { PDFDocument, rgb, StandardFonts } = PDFLib;
-                const pdfDoc = await PDFDocument.create();
-                const page = pdfDoc.addPage();
-                const { width, height } = page.getSize();
-                const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-                // 提取文字內容
-                const content = getEditorContent();
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = content;
-                
-                let yPosition = height - 50;
-                const lineHeight = 20;
-                const margin = 50;
-
-                // 遍歷所有節點
-                for (let node of tempDiv.childNodes) {
-                    if (node.nodeType === Node.TEXT_NODE) {
-                        const text = node.textContent.trim();
-                        if (text) {
-                            const lines = text.split('\n');
-                            for (let line of lines) {
-                                if (yPosition < 50) {
-                                    const newPage = pdfDoc.addPage();
-                                    yPosition = newPage.getSize().height - 50;
-                                }
-                                page.drawText(line, {
-                                    x: margin,
-                                    y: yPosition,
-                                    size: 12,
-                                    font: font,
-                                    color: rgb(0, 0, 0),
-                                    maxWidth: width - 2 * margin
-                                });
-                                yPosition -= lineHeight;
-                            }
-                        }
-                    } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'IMG') {
-                        const src = node.getAttribute('src');
-                        if (src && src.startsWith('data:')) {
-                            try {
-                                const imageBytes = await fetch(src).then(res => res.arrayBuffer());
-                                let image;
-                                if (src.includes('image/png')) {
-                                    image = await pdfDoc.embedPng(imageBytes);
-                                } else {
-                                    image = await pdfDoc.embedJpg(imageBytes);
-                                }
-                                
-                                const imgWidth = Math.min(image.width, width - 2 * margin);
-                                const imgHeight = (image.height / image.width) * imgWidth;
-                                
-                                if (yPosition - imgHeight < 50) {
-                                    const newPage = pdfDoc.addPage();
-                                    yPosition = newPage.getSize().height - 50;
-                                }
-                                
-                                page.drawImage(image, {
-                                    x: margin,
-                                    y: yPosition - imgHeight,
-                                    width: imgWidth,
-                                    height: imgHeight
-                                });
-                                yPosition -= imgHeight + 20;
-                            } catch (err) {
-                                console.error('圖片嵌入失敗:', err);
-                            }
-                        }
-                    } else if (node.textContent && node.textContent.trim()) {
-                        const text = node.textContent.trim();
-                        const lines = text.split('\n');
-                        for (let line of lines) {
-                            if (yPosition < 50) {
-                                const newPage = pdfDoc.addPage();
-                                yPosition = newPage.getSize().height - 50;
-                            }
-                            page.drawText(line, {
-                                x: margin,
-                                y: yPosition,
-                                size: 12,
-                                font: font,
-                                color: rgb(0, 0, 0),
-                                maxWidth: width - 2 * margin
-                            });
-                            yPosition -= lineHeight;
-                        }
-                    }
-                }
-
-                const pdfBytes = await pdfDoc.save();
-                downloadFile(pdfBytes, 'wechat_export.pdf', 'application/pdf');
-                status.textContent = 'PDF 已下載';
-            } catch (error) {
-                console.error(error);
-                status.textContent = `錯誤: ${error.message}`;
-            }
+        // ============ 匯出為 PDF（使用瀏覽器列印功能）============
+        function exportToPdf() {
+            window.print();
         }
 
         // ============ 匯出為 Word ============
@@ -257,67 +161,82 @@
 
             try {
                 const { Document, Packer, Paragraph, TextRun, ImageRun } = docx;
-                const content = getEditorContent();
+                const editor = document.getElementById('editor');
+                const children = [];
 
-                // 解析 HTML 並轉換為 docx 段落
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(content, 'text/html');
-                const paragraphs = [];
-
-                for (let node of doc.body.childNodes) {
+                // 遞迴處理節點
+                async function processNode(node) {
                     if (node.nodeType === Node.TEXT_NODE) {
-                        const text = node.textContent.trim();
-                        if (text) {
-                            const lines = text.split('\n');
-                            for (let line of lines) {
-                                if (line.trim()) {
-                                    paragraphs.push(new Paragraph({
-                                        children: [new TextRun(line)],
-                                        spacing: { line: 360 }
-                                    }));
-                                }
-                            }
+                        const text = node.textContent;
+                        if (text.trim()) {
+                            return [new TextRun(text)];
                         }
+                        return [];
                     } else if (node.nodeType === Node.ELEMENT_NODE) {
                         if (node.tagName === 'IMG') {
-                            const src = node.getAttribute('src');
-                            if (src && src.startsWith('data:')) {
-                                // 將 data URL 轉換為 Uint8Array
-                                const base64 = src.split(',')[1];
-                                const binaryString = atob(base64);
-                                const bytes = new Uint8Array(binaryString.length);
-                                for (let i = 0; i < binaryString.length; i++) {
-                                    bytes[i] = binaryString.charCodeAt(i);
-                                }
-                                paragraphs.push(new Paragraph({
+                            const filename = node.getAttribute('data-filename');
+                            if (filename && uploadedImages[filename]) {
+                                const file = uploadedImages[filename].file;
+                                const arrayBuffer = await file.arrayBuffer();
+                                const uint8Array = new Uint8Array(arrayBuffer);
+                                
+                                return [new Paragraph({
                                     children: [
                                         new ImageRun({
-                                            data: bytes,
+                                            data: uint8Array,
                                             transformation: {
                                                 width: 400,
                                                 height: 300
                                             }
                                         })
-                                    ]
-                                }));
+                                    ],
+                                    spacing: { after: 200 }
+                                })];
                             }
-                        } else if (node.textContent.trim()) {
-                            const lines = node.textContent.trim().split('\n');
-                            for (let line of lines) {
-                                if (line.trim()) {
-                                    paragraphs.push(new Paragraph({
-                                        children: [new TextRun(line)],
-                                        spacing: { line: 360 }
-                                    }));
+                        } else if (node.tagName === 'BR') {
+                            return [new Paragraph({ text: '' })];
+                        } else if (node.tagName === 'DIV' || node.tagName === 'P') {
+                            const runs = [];
+                            for (let child of node.childNodes) {
+                                const result = await processNode(child);
+                                runs.push(...result);
+                            }
+                            if (runs.length > 0) {
+                                const hasParagraph = runs.some(r => r instanceof Paragraph);
+                                if (hasParagraph) {
+                                    return runs;
+                                } else {
+                                    return [new Paragraph({
+                                        children: runs,
+                                        spacing: { after: 200 }
+                                    })];
                                 }
                             }
+                        } else {
+                            const runs = [];
+                            for (let child of node.childNodes) {
+                                const result = await processNode(child);
+                                runs.push(...result);
+                            }
+                            return runs;
                         }
                     }
+                    return [];
+                }
+
+                // 處理編輯器的所有子節點
+                for (let node of editor.childNodes) {
+                    const result = await processNode(node);
+                    children.push(...result);
+                }
+
+                if (children.length === 0) {
+                    children.push(new Paragraph({ text: '' }));
                 }
 
                 const docxDoc = new Document({
                     sections: [{
-                        children: paragraphs
+                        children: children
                     }]
                 });
 
@@ -337,14 +256,11 @@
 
             try {
                 const zip = new JSZip();
-                const content = getEditorContent();
-
-                // 提取文字內容並生成 Markdown
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = content;
+                const editor = document.getElementById('editor');
                 let markdown = '# 微信聊天記錄\n\n';
 
-                for (let node of tempDiv.childNodes) {
+                // 遍歷編輯器內容
+                for (let node of editor.childNodes) {
                     if (node.nodeType === Node.TEXT_NODE) {
                         const text = node.textContent.trim();
                         if (text) {
@@ -352,8 +268,10 @@
                         }
                     } else if (node.nodeType === Node.ELEMENT_NODE) {
                         if (node.tagName === 'IMG') {
-                            const alt = node.getAttribute('alt') || 'image';
-                            markdown += `![${alt}](./${alt})\n\n`;
+                            const filename = node.getAttribute('data-filename') || node.getAttribute('alt') || 'image.jpg';
+                            markdown += `![${filename}](./${filename})\n\n`;
+                        } else if (node.tagName === 'BR') {
+                            markdown += '\n';
                         } else if (node.textContent.trim()) {
                             markdown += node.textContent.trim() + '\n\n';
                         }
