@@ -1,0 +1,298 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信聊天內容匯出工具</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; background-color: #f7f7f7; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #1a1a1a; }
+        .section { margin-bottom: 20px; }
+        h2 { font-size: 16px; color: #444; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+        #editor { border: 1px solid #ddd; min-height: 200px; padding: 15px; border-radius: 4px; background-color: #fff; line-height: 1.6; }
+        #editor:focus { border-color: #007aff; outline: none; box-shadow: 0 0 0 2px rgba(0,122,255,0.2); }
+        #image-upload-area { border: 2px dashed #ddd; padding: 20px; text-align: center; border-radius: 4px; cursor: pointer; }
+        #image-upload-area.hover { border-color: #007aff; background-color: #f0f8ff; }
+        #image-upload-area p { margin: 0; color: #888; }
+        .button-group { text-align: center; margin-top: 30px; }
+        .btn { background-color: #007aff; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 0 5px; transition: background-color 0.2s; }
+        .btn:hover { background-color: #005bb5; }
+        .btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        #status { text-align: center; margin-top: 20px; color: #666; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>微信聊天內容匯出工具</h1>
+
+        <div class="section">
+            <h2>1. 貼上從郵件複製的文字內容</h2>
+            <div id="editor" contenteditable="true"></div>
+        </div>
+
+        <div class="section">
+            <h2>2. 上傳郵件中的圖片附件</h2>
+            <div id="image-upload-area">
+                <p>點擊此處選擇圖片，或將圖片拖曳到這裡</p>
+                <input type="file" id="image-input" multiple accept="image/*" style="display: none;">
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button id="export-pdf" class="btn">匯出為 PDF</button>
+            <button id="export-docx" class="btn">匯出為 Word</button>
+            <button id="export-zip" class="btn">匯出為 ZIP (含MD)</button>
+        </div>
+
+        <div id="status"></div>
+    </div>
+
+    <!-- 本地化的開源函式庫 -->
+    <script src="./libs/pdf-lib.min.js"></script>
+    <script src="./libs/docx.umd.js"></script>
+    <script src="./libs/jszip.min.js"></script>
+
+    <script>
+        // ============================================
+        // 微信聊天內容匯出工具 - 核心邏輯
+        // ============================================
+
+        // 全局變數：儲存上傳的圖片
+        let uploadedImages = {}; // { 檔名: { file, dataUrl } }
+
+        // ============ 初始化事件監聽 ============
+        document.addEventListener('DOMContentLoaded', function() {
+            const editor = document.getElementById('editor');
+            const imageUploadArea = document.getElementById('image-upload-area');
+            const imageInput = document.getElementById('image-input');
+            const exportPdfBtn = document.getElementById('export-pdf');
+            const exportDocxBtn = document.getElementById('export-docx');
+            const exportZipBtn = document.getElementById('export-zip');
+
+            // 圖片上傳區域點擊事件
+            imageUploadArea.addEventListener('click', () => imageInput.click());
+
+            // 拖曳上傳
+            imageUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                imageUploadArea.classList.add('hover');
+            });
+            imageUploadArea.addEventListener('dragleave', () => {
+                imageUploadArea.classList.remove('hover');
+            });
+            imageUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                imageUploadArea.classList.remove('hover');
+                handleImageUpload(e.dataTransfer.files);
+            });
+
+            // 檔案選擇事件
+            imageInput.addEventListener('change', (e) => {
+                handleImageUpload(e.target.files);
+            });
+
+            // 匯出按鈕事件
+            exportPdfBtn.addEventListener('click', exportToPdf);
+            exportDocxBtn.addEventListener('click', exportToDocx);
+            exportZipBtn.addEventListener('click', exportToZip);
+        });
+
+        // ============ 圖片上傳處理 ============
+        function handleImageUpload(files) {
+            const status = document.getElementById('status');
+            let uploadedCount = 0;
+
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImages[file.name] = {
+                        file: file,
+                        dataUrl: e.target.result
+                    };
+                    uploadedCount++;
+                    if (uploadedCount === files.length) {
+                        status.textContent = `已上傳 ${Object.keys(uploadedImages).length} 張圖片`;
+                        replaceImagePlaceholders();
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // ============ 圖片佔位符替換 ============
+        function replaceImagePlaceholders() {
+            const editor = document.getElementById('editor');
+            let html = editor.innerHTML;
+
+            // 正則表達式：匹配 [图片: 檔名(请在附件中查看)]
+            const pattern = /\[图片:\s*([^\]]+?)\(请在附件中查看\)\]/g;
+
+            html = html.replace(pattern, (match, filename) => {
+                filename = filename.trim();
+                if (uploadedImages[filename]) {
+                    return `<img src="${uploadedImages[filename].dataUrl}" style="max-width: 100%; height: auto; margin: 10px 0; border-radius: 4px;" alt="${filename}">`;
+                }
+                return match; // 如果找不到對應圖片，保持原樣
+            });
+
+            editor.innerHTML = html;
+        }
+
+        // ============ 提取編輯器內容（含圖片） ============
+        function getEditorContent() {
+            const editor = document.getElementById('editor');
+            return editor.innerHTML;
+        }
+
+        // ============ 匯出為 PDF ============
+        async function exportToPdf() {
+            const status = document.getElementById('status');
+            status.textContent = '正在生成 PDF...';
+
+            try {
+                const { PDFDocument, rgb } = PDFLib;
+                const pdfDoc = await PDFDocument.create();
+                const page = pdfDoc.addPage();
+                const { width, height } = page.getSize();
+
+                // 簡單的文字輸出（暫時不支援複雜排版）
+                const content = getEditorContent();
+                const text = content.replace(/<[^>]*>/g, ''); // 移除 HTML 標籤
+
+                page.drawText(text, {
+                    x: 50,
+                    y: height - 100,
+                    size: 12,
+                    color: rgb(0, 0, 0),
+                    maxWidth: width - 100
+                });
+
+                const pdfBytes = await pdfDoc.save();
+                downloadFile(pdfBytes, 'export.pdf', 'application/pdf');
+                status.textContent = 'PDF 已下載';
+            } catch (error) {
+                status.textContent = `錯誤: ${error.message}`;
+            }
+        }
+
+        // ============ 匯出為 Word ============
+        async function exportToDocx() {
+            const status = document.getElementById('status');
+            status.textContent = '正在生成 Word 文件...';
+
+            try {
+                const { Document, Packer, Paragraph, TextRun, ImageRun } = docx;
+                const content = getEditorContent();
+
+                // 解析 HTML 並轉換為 docx 段落
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(content, 'text/html');
+                const paragraphs = [];
+
+                for (let node of doc.body.childNodes) {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const text = node.textContent.trim();
+                        if (text) {
+                            paragraphs.push(new Paragraph({
+                                text: text,
+                                spacing: { line: 360 }
+                            }));
+                        }
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        if (node.tagName === 'IMG') {
+                            const src = node.getAttribute('src');
+                            if (src && src.startsWith('data:')) {
+                                // 將 data URL 轉換為 Uint8Array
+                                const base64 = src.split(',')[1];
+                                const binaryString = atob(base64);
+                                const bytes = new Uint8Array(binaryString.length);
+                                for (let i = 0; i < binaryString.length; i++) {
+                                    bytes[i] = binaryString.charCodeAt(i);
+                                }
+                                paragraphs.push(new Paragraph({
+                                    children: [
+                                        new ImageRun({
+                                            data: bytes,
+                                            transformation: {
+                                                width: 200,
+                                                height: 200
+                                            }
+                                        })
+                                    ]
+                                }));
+                            }
+                        } else if (node.textContent.trim()) {
+                            paragraphs.push(new Paragraph({
+                                text: node.textContent.trim(),
+                                spacing: { line: 360 }
+                            }));
+                        }
+                    }
+                }
+
+                const docxDoc = new Document({
+                    sections: [{
+                        children: paragraphs
+                    }]
+                });
+
+                const blob = await Packer.toBlob(docxDoc);
+                downloadFile(blob, 'export.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+                status.textContent = 'Word 文件已下載';
+            } catch (error) {
+                status.textContent = `錯誤: ${error.message}`;
+            }
+        }
+
+        // ============ 匯出為 ZIP ============
+        async function exportToZip() {
+            const status = document.getElementById('status');
+            status.textContent = '正在生成 ZIP 檔案...';
+
+            try {
+                const zip = new JSZip();
+                const content = getEditorContent();
+
+                // 提取文字內容並生成 Markdown
+                const text = content.replace(/<img[^>]*>/g, (match) => {
+                    const src = match.match(/src="([^"]*)"/)[1];
+                    const alt = match.match(/alt="([^"]*)"/)[1];
+                    return `![${alt}](./${alt})`;
+                }).replace(/<[^>]*>/g, '');
+
+                const markdown = `# 微信聊天記錄\n\n${text}`;
+                zip.file('content.md', markdown);
+
+                // 添加圖片到 ZIP
+                for (let filename in uploadedImages) {
+                    const base64 = uploadedImages[filename].dataUrl.split(',')[1];
+                    zip.file(filename, base64, { base64: true });
+                }
+
+                const blob = await zip.generateAsync({ type: 'blob' });
+                downloadFile(blob, 'export.zip', 'application/zip');
+                status.textContent = 'ZIP 檔案已下載';
+            } catch (error) {
+                status.textContent = `錯誤: ${error.message}`;
+            }
+        }
+
+        // ============ 下載檔案 ============
+        function downloadFile(data, filename, mimeType) {
+            const blob = data instanceof Blob ? data : new Blob([data], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+
+</body>
+</html>
