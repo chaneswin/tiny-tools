@@ -570,13 +570,27 @@
         }
     }
 
-    // -------------------- 事件处理与UI逻辑 (与之前版本相同) --------------------
+    // -------------------- 事件处理与UI逻辑 --------------------
     function getCanvasCoords(e) {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
-        const mouseX = (e.clientX - rect.left) * scaleX;
-        const mouseY = (e.clientY - rect.top) * scaleY;
+        let clientX, clientY;
+        
+        // 支持触控和鼠标事件
+        if (e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else if (e.changedTouches && e.changedTouches.length > 0) {
+            clientX = e.changedTouches[0].clientX;
+            clientY = e.changedTouches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+        
+        const mouseX = (clientX - rect.left) * scaleX;
+        const mouseY = (clientY - rect.top) * scaleY;
         return {
             x: Math.min(canvas.width, Math.max(0, mouseX)),
             y: Math.min(canvas.height, Math.max(0, mouseY))
@@ -646,6 +660,63 @@
     });
 
     canvas.addEventListener('dragstart', (e) => e.preventDefault());
+
+    // -------------------- 触控事件支持 --------------------
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (!img) {
+            alert('请先上传图片');
+            return;
+        }
+        const { x, y } = getCanvasCoords(e);
+        startX = x;
+        startY = y;
+        isDragging = true;
+        selectionRect = null;
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+        if (!isDragging || !img) return;
+        e.preventDefault();
+        const { x, y } = getCanvasCoords(e);
+        endX = x;
+        endY = y;
+        redrawCanvas();
+        const rectLeft = Math.min(startX, endX);
+        const rectRight = Math.max(startX, endX);
+        const rectTop = Math.min(startY, endY);
+        const rectBottom = Math.max(startY, endY);
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.15)';
+        ctx.strokeStyle = '#2563eb';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 6]);
+        ctx.strokeRect(rectLeft, rectTop, rectRight - rectLeft, rectBottom - rectTop);
+        ctx.fillRect(rectLeft, rectTop, rectRight - rectLeft, rectBottom - rectTop);
+        ctx.setLineDash([]);
+    });
+
+    canvas.addEventListener('touchend', (e) => {
+        if (!isDragging || !img) return;
+        isDragging = false;
+        const { x, y } = getCanvasCoords(e);
+        endX = x;
+        endY = y;
+
+        const left = Math.min(startX, endX);
+        const right = Math.max(startX, endX);
+        const top = Math.min(startY, endY);
+        const bottom = Math.max(startY, endY);
+        const width = right - left;
+        const height = bottom - top;
+
+        if (width > 5 && height > 5) {
+            selectionRect = { x: left, y: top, w: width, h: height };
+        } else {
+            selectionRect = null;
+        }
+        redrawCanvas();
+        updateSelectionStatus();
+    });
 
     function updateSelectionStatus() {
         if (selectionRect) {
