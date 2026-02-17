@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圖區·混字 Pro · 中英書法混合版</title>
+    <!-- 加载开源字体 (Google Fonts) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- 原有英文字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;1,400&family=Montserrat&family=Open+Sans&family=Roboto&family=Slabo+27px&display=swap" rel="stylesheet">
+    <!-- 新增的中文书法字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Zhi+Mang+Xing&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #f5f7fb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 2rem 1rem;
+        }
+        .card {
+            max-width: 1300px;
+            width: 100%;
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            overflow: hidden;
+            padding: 2rem 2rem 2.5rem;
+        }
+        .spec {
+            background: #f0f4ff;
+            padding: 1rem 2rem;
+            border-radius: 2rem;
+            margin-bottom: 2rem;
+            border-left: 8px solid #3b82f6;
+            font-size: 0.95rem;
+        }
+        .spec h2 {
+            margin: 0 0 0.5rem 0;
+            font-weight: 600;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .spec ul {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+        .spec a {
+            color: #1e40af;
+        }
+        .font-badge {
+            display: inline-block;
+            background: #dbeafe;
+            border-radius: 40px;
+            padding: 0.2rem 0.8rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-right: 0.5rem;
+            margin-bottom: 0.3rem;
+            border: 1px solid #b1c9ff;
+        }
+        .main-panel {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 1.8rem;
+        }
+        .canvas-area {
+            flex: 2;
+            min-width: 480px;
+            background: #fafafa;
+            border-radius: 1.8rem;
+            padding: 1.5rem;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .toolbar {
+            margin-bottom: 1.2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            align-items: center;
+        }
+        .btn {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 60px;
+            padding: 0.5rem 1.4rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: 0.15s;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            border-color: #2563eb;
+            color: white;
+            box-shadow: 0 6px 12px -8px #1e3a8a;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        .btn:hover {
+            background: #f1f5f9;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .canvas-wrapper {
+            position: relative;
+            display: inline-block;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 2px solid #e2e8f0;
+            background: #f1f5f9;
+            line-height: 0;
+            cursor: crosshair;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            pointer-events: auto;
+            background: #e9eef3;
+        }
+        .info-text {
+            font-size: 0.9rem;
+            color: #334155;
+            margin-top: 0.8rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .badge {
+            background: #e2e8f0;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+        }
+        .editor-panel {
+            flex: 1;
+            min-width: 300px;
+            background: #ffffff;
+            border-radius: 1.8rem;
+            padding: 1.6rem 1.5rem;
+            box-shadow: 0 10px 25px -10px rgba(0,0,0,0.1);
+            border: 1px solid #f0f0f0;
+        }
+        .editor-panel h3 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .block-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 0.4rem;
+            margin-bottom: 1.5rem;
+        }
+        .text-block-item {
+            background: #f8fafc;
+            border-radius: 1.4rem;
+            padding: 1rem 1rem 1rem 1.3rem;
+            border: 1px solid #dee7f0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+            transition: 0.1s;
+        }
+        .text-block-item:hover {
+            border-color: #94a3b8;
+        }
+        .block-row {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .block-input {
+            flex: 2;
+            min-width: 140px;
+            padding: 0.7rem 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            background: white;
+        }
+        .block-select {
+            flex: 1;
+            min-width: 110px;
+            padding: 0.7rem 0.8rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 40px;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .block-delete {
+            background: #fee2e2;
+            border: none;
+            border-radius: 40px;
+            width: 2.4rem;
+            height: 2.4rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #991b1b;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.1s;
+            border: 1px solid #fecaca;
+        }
+        .block-delete:hover {
+            background: #fecaca;
+            color: #7f1d1d;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+        .attribution {
+            margin-top: 2rem;
+            font-size: 0.85rem;
+            color: #64748b;
+            border-top: 1px dashed #cbd5e1;
+            padding-top: 1.2rem;
+            text-align: center;
+        }
+        .footer-note {
+            background: #f1f4f9;
+            border-radius: 30px;
+            padding: 0.2rem 1.2rem;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="spec">
+        <h2>📐 圖像标注 · 中英書法混合器</h2>
+        <p><strong>· 開源字體 · 自由框選 · 逐字混搭 ·</strong> 上傳圖片後拖拽框選區域，為不同文字塊選擇不同字體（包含西文及中文書法），實現藏頭詩等創意效果。</p>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0.7rem 0 0.2rem;">
+            <span class="font-badge" style="font-family: 'Roboto', sans-serif;">Roboto</span>
+            <span class="font-badge" style="font-family: 'Open Sans', sans-serif;">Open Sans</span>
+            <span class="font-badge" style="font-family: 'Lato', sans-serif;">Lato</span>
+            <span class="font-badge" style="font-family: 'Slabo 27px', serif;">Slabo 27px</span>
+            <span class="font-badge" style="font-family: 'Montserrat', sans-serif;">Montserrat</span>
+            <span class="font-badge" style="font-family: 'Ma Shan Zheng', cursive;">馬善政楷書</span>
+            <span class="font-badge" style="font-family: 'Zhi Mang Xing', cursive;">志莽行書</span>
+        </div>
+    </div>
+
+    <div class="main-panel">
+        <!-- 左侧 canvas 操作区 -->
+        <div class="canvas-area">
+            <div class="toolbar">
+                <input type="file" id="uploadImage" accept="image/*" style="display:none;">
+                <button class="btn" id="triggerUpload">📁 上傳圖片</button>
+                <button class="btn" id="clearSelectionBtn">🗑️ 清除選區</button>
+                <span class="badge" id="selectionStatus">未框選</span>
+            </div>
+            <div class="canvas-wrapper">
+                <canvas id="mainCanvas" width="600" height="400"></canvas>
+            </div>
+            <div class="info-text">
+                <span>🖱️ 拖拽框選區域 | 双击画布重置选区</span>
+                <span>✍️ 文字显示在蓝框内</span>
+            </div>
+        </div>
+
+        <!-- 右侧编辑器：字体块列表 -->
+        <div class="editor-panel">
+            <h3>🖋️ 文字塊 · 混搭字體</h3>
+            <div id="blocksContainer" class="block-list">
+                <!-- 动态生成块列表 -->
+            </div>
+            <div class="action-buttons">
+                <button class="btn" id="addBlockBtn">➕ 添加文字塊</button>
+                <button class="btn btn-primary" id="redrawTextBtn">🔄 重繪文字</button>
+            </div>
+            <div style="margin-top:1.5rem; font-size:0.9rem; color:#475569; background:#f1f5f9; border-radius:20px; padding:0.7rem 1.2rem;">
+                ⚡ 提示：修改文字或字體後自動渲染；若想改變單個字符字體，單獨建塊。
+            </div>
+        </div>
+    </div>
+
+    <div class="attribution">
+        <span class="footer-note">🅯 開源字體 via Google Fonts · 完全靜態 · 字符級混合字體繪製</span>
+    </div>
+</div>
+
+<script>
+(function() {
+    // -------------------- 开源字体列表 (必须与Google Fonts引入一致) --------------------
+    const FONT_LIST = [
+        // 原有英文字体
+        { name: 'Roboto', css: 'Roboto, sans-serif' },
+        { name: 'Open Sans', css: '"Open Sans", sans-serif' },
+        { name: 'Lato', css: 'Lato, sans-serif' },
+        { name: 'Slabo 27px', css: '"Slabo 27px", serif' },
+        { name: 'Montserrat', css: 'Montserrat, sans-serif' },
+        // 新增中文书法字体
+        { name: '馬善政楷書', css: '"Ma Shan Zheng", cursive' },
+        { name: '志莽行書', css: '"Zhi Mang Xing", cursive' }
+    ];
+
+    // DOM 元素
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    const uploadInput = document.getElementById('uploadImage');
+    const triggerUpload = document.getElementById('triggerUpload');
+    const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+    const selectionStatus = document.getElementById('selectionStatus');
+    const blocksContainer = document.getElementById('blocksContainer');
+    const addBlockBtn = document.getElementById('addBlockBtn');
+    const redrawTextBtn = document.getElementById('redrawTextBtn');
+
+    // 状态变量
+    let img = null;
+    let isDragging = false;
+    let startX = 0, startY = 0, endX = 0, endY = 0;
+    let selectionRect = null;
+    let textBlocks = [];
+
+    // -------------------- 初始化示例块 (演示藏头诗效果) --------------------
+    textBlocks.push({ text: '藏', fontIndex: 6 }); // 志莽行书
+    textBlocks.push({ text: '字于首', fontIndex: 5 }); // 马善政楷书
+    textBlocks.push({ text: '头', fontIndex: 6 }); // 志莽行书
+    textBlocks.push({ text: '列之中', fontIndex: 5 }); // 马善政楷书
+    textBlocks.push({ text: '诗', fontIndex: 6 }); // 志莽行书
+    textBlocks.push({ text: '意自现', fontIndex: 5 }); // 马善政楷书
+
+    // -------------------- 辅助函数：重绘canvas(图片+选区+文字) --------------------
+    function redrawCanvas() {
+        if (!img) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#e9eef3';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('请上传图片', canvas.width/2, canvas.height/2);
+            return;
+        }
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        if (selectionRect) {
+            const { x, y, w, h } = selectionRect;
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.15)';
+            ctx.strokeStyle = '#2563eb';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([8, 6]);
+            ctx.strokeRect(x, y, w, h);
+            ctx.fillRect(x, y, w, h);
+            ctx.setLineDash([]);
+        }
+
+        if (selectionRect && img) {
+            drawTextInsideSelection();
+        }
+    }
+
+    // -------------------- 核心：在选区内绘制换行文本 (字符级字体混合) --------------------
+    function drawTextInsideSelection() {
+        if (!selectionRect || !img) return;
+        const { x: left, y: top, w: width, h: height } = selectionRect;
+        if (width < 4 || height < 4) return;
+
+        const chars = [];
+        for (let block of textBlocks) {
+            const text = block.text || '';
+            const fontCss = FONT_LIST[block.fontIndex]?.css || FONT_LIST[0].css;
+            for (let c of text) {
+                chars.push({ char: c, fontCss });
+            }
+        }
+        if (chars.length === 0) return;
+
+        const fontSize = 24;
+        const lineHeight = fontSize * 1.2;
+        let cursorX = left;
+        let cursorY = top + fontSize * 0.9;
+        ctx.textBaseline = 'alphabetic';
+        
+        for (let i = 0; i < chars.length; i++) {
+            const { char, fontCss } = chars[i];
+            ctx.font = `${fontSize}px ${fontCss}`;
+            
+            const metrics = ctx.measureText(char);
+            const charWidth = metrics.width;
+
+            if (cursorX + charWidth > left + width - 2) {
+                cursorX = left;
+                cursorY += lineHeight;
+                if (cursorY > top + height - fontSize*0.2) break;
+            }
+
+            ctx.fillStyle = '#1e293b';
+            ctx.fillText(char, cursorX, cursorY);
+            cursorX += charWidth;
+        }
+    }
+
+    // -------------------- 事件处理与UI逻辑 (与之前版本相同) --------------------
+    function getCanvasCoords(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mouseX = (e.clientX - rect.left) * scaleX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
+        return {
+            x: Math.min(canvas.width, Math.max(0, mouseX)),
+            y: Math.min(canvas.height, Math.max(0, mouseY))
+        };
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        if (!img) {
+            alert('请先上传图片');
+            return;
+        }
+        const { x, y } = getCanvasCoords(e);
+        startX = x;
+        startY = y;
+        isDragging = true;
+        selectionRect = null;
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (!isDragging || !img) return;
+        e.preventDefault();
+        const { x, y } = getCanvasCoords(e);
+        endX = x;
+        endY = y;
+        redrawCanvas();
+        const rectLeft = Math.min(startX, endX);
+        const rectRight = Math.max(startX, endX);
+        const rectTop = Math.min(startY, endY);
+        const rectBottom = Math.max(startY, endY);
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.15)';
+        ctx.strokeStyle = '#2563eb';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 6]);
+        ctx.strokeRect(rectLeft, rectTop, rectRight - rectLeft, rectBottom - rectTop);
+        ctx.fillRect(rectLeft, rectTop, rectRight - rectLeft, rectBottom - rectTop);
+        ctx.setLineDash([]);
+    });
+
+    canvas.addEventListener('mouseup', (e) => {
+        if (!isDragging || !img) return;
+        isDragging = false;
+        const { x, y } = getCanvasCoords(e);
+        endX = x;
+        endY = y;
+
+        const left = Math.min(startX, endX);
+        const right = Math.max(startX, endX);
+        const top = Math.min(startY, endY);
+        const bottom = Math.max(startY, endY);
+        const width = right - left;
+        const height = bottom - top;
+
+        if (width > 5 && height > 5) {
+            selectionRect = { x: left, y: top, w: width, h: height };
+        } else {
+            selectionRect = null;
+        }
+        redrawCanvas();
+        updateSelectionStatus();
+    });
+
+    canvas.addEventListener('dblclick', () => {
+        selectionRect = null;
+        redrawCanvas();
+        updateSelectionStatus();
+    });
+
+    canvas.addEventListener('dragstart', (e) => e.preventDefault());
+
+    function updateSelectionStatus() {
+        if (selectionRect) {
+            const { x, y, w, h } = selectionRect;
+            selectionStatus.innerText = `选区 (${Math.round(x)},${Math.round(y)})  ${Math.round(w)}x${Math.round(h)}`;
+        } else {
+            selectionStatus.innerText = '未框选';
+        }
+    }
+
+    triggerUpload.addEventListener('click', () => uploadInput.click());
+
+    uploadInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const image = new Image();
+            image.onload = () => {
+                canvas.width = image.width;
+                canvas.height = image.height;
+                img = image;
+                selectionRect = null;
+                redrawCanvas();
+                updateSelectionStatus();
+            };
+            image.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    clearSelectionBtn.addEventListener('click', () => {
+        selectionRect = null;
+        redrawCanvas();
+        updateSelectionStatus();
+    });
+
+    function renderBlocks() {
+        let html = '';
+        textBlocks.forEach((block, index) => {
+            const selectedFontIndex = block.fontIndex ?? 0;
+            html += `
+                <div class="text-block-item" data-index="${index}">
+                    <div class="block-row">
+                        <input type="text" class="block-input" value="${escapeHtml(block.text || '')}" placeholder="文字" data-index="${index}" data-field="text">
+                        <select class="block-select" data-index="${index}" data-field="fontIndex">
+                            ${FONT_LIST.map((font, fi) => `<option value="${fi}" ${fi === selectedFontIndex ? 'selected' : ''}>${font.name}</option>`).join('')}
+                        </select>
+                        <button class="block-delete" data-index="${index}">✕</button>
+                    </div>
+                </div>
+            `;
+        });
+        blocksContainer.innerHTML = html;
+
+        document.querySelectorAll('.block-input').forEach(input => {
+            input.addEventListener('input', function(e) {
+                const idx = this.dataset.index;
+                if (idx !== undefined) {
+                    textBlocks[idx].text = this.value;
+                    redrawCanvas();
+                }
+            });
+        });
+        document.querySelectorAll('.block-select').forEach(select => {
+            select.addEventListener('change', function(e) {
+                const idx = this.dataset.index;
+                if (idx !== undefined) {
+                    textBlocks[idx].fontIndex = parseInt(this.value, 10);
+                    redrawCanvas();
+                }
+            });
+        });
+        document.querySelectorAll('.block-delete').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const idx = this.dataset.index;
+                if (idx !== undefined && textBlocks.length > 1) {
+                    textBlocks.splice(idx, 1);
+                    renderBlocks();
+                    redrawCanvas();
+                } else if (textBlocks.length <= 1) {
+                    alert('至少保留一个文字块 (可以留空)');
+                }
+            });
+        });
+    }
+
+    function escapeHtml(unsafe) {
+        return unsafe.replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[m] || m);
+    }
+
+    addBlockBtn.addEventListener('click', () => {
+        textBlocks.push({ text: '新字', fontIndex: 0 });
+        renderBlocks();
+        redrawCanvas();
+    });
+
+    redrawTextBtn.addEventListener('click', () => redrawCanvas());
+
+    renderBlocks();
+    (function initCanvas() {
+        ctx.fillStyle = '#e9eef3';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#475569';
+        ctx.font = '16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('上传图片开始标注', canvas.width/2, canvas.height/2);
+    })();
+})();
+</script>
+</body>
+</html>
