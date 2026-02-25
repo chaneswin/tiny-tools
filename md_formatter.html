@@ -166,7 +166,8 @@
             background-color: #E8F4F8;
         }
 
-        .menu-item:hover .dropdown-menu {
+        .menu-item:hover .dropdown-menu,
+        .menu-item.open .dropdown-menu {
             display: block;
         }
 
@@ -486,10 +487,10 @@
         <div class="menu-item">
             <span>檔案</span>
             <div class="dropdown-menu">
-                <div class="dropdown-item" id="menu-import-md">匯入 Markdown</div>
+                <label class="dropdown-item" id="menu-import-md" style="display:block;cursor:pointer;margin:0;">匯入 Markdown<input type="file" id="file-input-md" accept=".md,.txt" style="display:none;"></label>
                 <div class="dropdown-item" id="menu-export-md">匯出 Markdown</div>
                 <div class="dropdown-item" id="menu-export-pdf">匯出 PDF</div>
-                <div class="dropdown-item" id="menu-import-word">匯入 Word</div>
+                <label class="dropdown-item" id="menu-import-word" style="display:block;cursor:pointer;margin:0;">匯入 Word<input type="file" id="file-input-word" accept=".docx" style="display:none;"></label>
             </div>
         </div>
         <div class="menu-item">
@@ -506,14 +507,12 @@
                 <div class="dropdown-item" id="menu-line-break">換行 (br)</div>
                 <div class="dropdown-item" id="menu-new-paragraph">另起一段 (p)</div>
                 <div class="dropdown-item" data-cmd="insertHorizontalRule">分隔線</div>
-                <div class="dropdown-item" id="menu-image">圖片</div>
+                <label class="dropdown-item" id="menu-image" style="display:block;cursor:pointer;margin:0;">圖片<input type="file" id="file-input-image" accept="image/*" style="display:none;"></label>
             </div>
         </div>
     </div>
 
-    <input type="file" id="file-input-md" accept=".md" style="display: none;">
-    <input type="file" id="file-input-word" accept=".docx" style="display: none;">
-    <input type="file" id="file-input-image" accept="image/*" style="display: none;">
+
 
     <div class="main-container">
         <div class="left-panel">
@@ -2142,10 +2141,28 @@ scrollPeers.forEach(peer => {
     });
 });
 
-// 選單列邏輯
+// 選單列邏輯 - click/touch toggle for mobile
+document.querySelectorAll('.menu-item').forEach(function(item) {
+    item.addEventListener('click', function(e) {
+        // 如果點到的是 label（file input），讓它自然觸發，不 toggle dropdown
+        if (e.target.tagName === 'LABEL' || e.target.closest('label')) {
+            // 關閉 dropdown
+            item.classList.remove('open');
+            return;
+        }
+        var isOpen = item.classList.contains('open');
+        // 關閉所有 dropdown
+        document.querySelectorAll('.menu-item').forEach(function(i) { i.classList.remove('open'); });
+        if (!isOpen) item.classList.add('open');
+        e.stopPropagation();
+    });
+});
+document.addEventListener('click', function() {
+    document.querySelectorAll('.menu-item').forEach(function(i) { i.classList.remove('open'); });
+});
 function triggerFile(id) { document.getElementById(id).click(); }
 
-document.getElementById('menu-import-md').addEventListener('click', () => { triggerFile('file-input-md'); });
+// menu-import-md: label wraps input directly
 document.getElementById('file-input-md').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -2165,7 +2182,7 @@ document.getElementById('menu-export-md').addEventListener('click', () => {
 
 document.getElementById('menu-export-pdf').addEventListener('click', () => { window.print(); });
 
-document.getElementById('menu-import-word').addEventListener('click', () => { triggerFile('file-input-word'); });
+// menu-import-word: label wraps input directly
 document.getElementById('file-input-word').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -2228,7 +2245,7 @@ document.getElementById('menu-new-paragraph').addEventListener('mousedown', (e) 
     syncFromEditor();
 });
 
-document.getElementById('menu-image').addEventListener('click', () => { triggerFile('file-input-image'); });
+// menu-image: label wraps input directly
 document.getElementById('file-input-image').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
