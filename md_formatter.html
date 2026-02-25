@@ -2150,7 +2150,29 @@ document.getElementById('file-input-md').addEventListener('change', function(e) 
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = function(e) { mdOutput.value = e.target.result; syncFromMarkdown(); };
+    reader.onload = function(ev) {
+        const markdown = ev.target.result;
+        // 將 Markdown 轉為 HTML 寫入左側編輯區
+        if (typeof marked !== 'undefined') {
+            try {
+                const html = typeof marked.parse === 'function' ? marked.parse(markdown) : marked(markdown);
+                editor.innerHTML = html;
+            } catch(err) {
+                // fallback: 直接寫入純文字
+                editor.innerText = markdown;
+            }
+        } else {
+            editor.innerText = markdown;
+        }
+        syncFromEditor();
+        // 顯示載入提示
+        const toast = document.getElementById('toast');
+        if (toast) {
+            toast.textContent = '已載入：' + file.name;
+            toast.style.display = 'block';
+            setTimeout(function() { toast.style.display = 'none'; }, 2500);
+        }
+    };
     reader.readAsText(file);
     this.value = '';
 });
@@ -2273,5 +2295,6 @@ document.getElementById('btn-export-html').addEventListener('click', () => {
     URL.revokeObjectURL(url);
 });
     </script>
+    <div id="toast" style="display:none;position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;z-index:9999;pointer-events:none;"></div>
 </body>
 </html>
