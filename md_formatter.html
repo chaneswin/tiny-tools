@@ -486,10 +486,10 @@
         <div class="menu-item">
             <span>檔案</span>
             <div class="dropdown-menu">
-                <label for="file-input-md" class="dropdown-item" id="menu-import-md" style="display:block;cursor:pointer;">匯入 Markdown</label>
+                <label class="dropdown-item" id="menu-import-md" style="display:block;cursor:pointer;">匯入 Markdown<input type="file" id="file-input-md" accept=".md,.txt" style="display:none;"></label>
                 <div class="dropdown-item" id="menu-export-md">匯出 Markdown</div>
                 <div class="dropdown-item" id="menu-export-pdf">匯出 PDF</div>
-                <label for="file-input-word" class="dropdown-item" id="menu-import-word" style="display:block;cursor:pointer;">匯入 Word</label>
+                <label class="dropdown-item" id="menu-import-word" style="display:block;cursor:pointer;">匯入 Word<input type="file" id="file-input-word" accept=".docx" style="display:none;"></label>
             </div>
         </div>
         <div class="menu-item">
@@ -506,14 +506,12 @@
                 <div class="dropdown-item" id="menu-line-break">換行 (br)</div>
                 <div class="dropdown-item" id="menu-new-paragraph">另起一段 (p)</div>
                 <div class="dropdown-item" data-cmd="insertHorizontalRule">分隔線</div>
-                <label for="file-input-image" class="dropdown-item" id="menu-image" style="display:block;cursor:pointer;">圖片</label>
+                <label class="dropdown-item" id="menu-image" style="display:block;cursor:pointer;">圖片<input type="file" id="file-input-image" accept="image/*" style="display:none;"></label>
             </div>
         </div>
     </div>
 
-    <input type="file" id="file-input-md" accept=".md,.txt" style="position:absolute;left:-9999px;opacity:0;width:1px;height:1px;">
-    <input type="file" id="file-input-word" accept=".docx" style="position:absolute;left:-9999px;opacity:0;width:1px;height:1px;">
-    <input type="file" id="file-input-image" accept="image/*" style="position:absolute;left:-9999px;opacity:0;width:1px;height:1px;">
+
 
     <div class="main-container">
         <div class="left-panel">
